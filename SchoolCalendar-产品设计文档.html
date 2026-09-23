@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SchoolCalendar 产品设计文档 V1.0</title>
+<style>
+/* ============ 基础与变量 ============ */
+:root {
+  --bg: #f6f7f9;
+  --paper: #ffffff;
+  --text: #1a1d21;
+  --text-2: #55595f;
+  --text-3: #8a8f96;
+  --brand: #10b981;
+  --brand-weak: #d1fae5;
+  --line: #e5e7eb;
+  --code-bg: #f3f4f6;
+  --aside-bg: #ffffff;
+  --accent: #0e9f6e;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121417;
+    --paper: #1a1d21;
+    --text: #e8eaed;
+    --text-2: #b0b4ba;
+    --text-3: #7a7f86;
+    --brand: #34d399;
+    --brand-weak: #134e3a;
+    --line: #2c2f34;
+    --code-bg: #23262b;
+    --aside-bg: #16181c;
+    --accent: #6ee7b7;
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.75;
+  font-size: 15px;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ============ 布局 ============ */
+.layout { display: flex; min-height: 100vh; }
+aside {
+  width: 260px; flex-shrink: 0;
+  background: var(--aside-bg);
+  border-right: 1px solid var(--line);
+  padding: 24px 16px;
+  position: sticky; top: 0;
+  height: 100vh; overflow-y: auto;
+}
+aside h1 { font-size: 17px; margin-bottom: 4px; color: var(--text); }
+aside .ver { font-size: 12px; color: var(--text-3); margin-bottom: 18px; }
+aside nav a {
+  display: block; padding: 6px 10px; border-radius: 8px;
+  font-size: 13px; color: var(--text-2); margin-bottom: 2px;
+}
+aside nav a:hover { background: var(--brand-weak); color: var(--text); text-decoration: none; }
+aside nav a.sub { padding-left: 24px; font-size: 12.5px; }
+main { flex: 1; min-width: 0; padding: 40px 56px 120px; max-width: 980px; }
+
+/* ============ 排版元素 ============ */
+.doc-meta {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 14px; padding: 18px 24px; margin-bottom: 36px;
+  font-size: 13.5px; color: var(--text-2);
+}
+.doc-meta b { color: var(--text); }
+section { margin-bottom: 52px; }
+h2 {
+  font-size: 24px; padding-bottom: 10px; margin-bottom: 20px;
+  border-bottom: 2px solid var(--brand);
+}
+h3 { font-size: 18px; margin: 30px 0 12px; }
+h3::before { content: "› "; color: var(--brand); }
+h4 { font-size: 15.5px; margin: 22px 0 10px; color: var(--text); }
+p { margin: 10px 0; color: var(--text-2); }
+p b, li b { color: var(--text); }
+ul, ol { margin: 10px 0 10px 22px; color: var(--text-2); }
+li { margin: 4px 0; }
+blockquote {
+  border-left: 4px solid var(--brand);
+  background: var(--brand-weak);
+  padding: 12px 18px; border-radius: 0 10px 10px 0;
+  margin: 14px 0; color: var(--text-2); font-size: 14px;
+}
+blockquote b { color: var(--text); }
+table {
+  width: 100%; border-collapse: collapse; margin: 14px 0;
+  background: var(--paper); border-radius: 12px; overflow: hidden;
+  font-size: 13.5px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+th { background: var(--brand-weak); color: var(--text); text-align: left; }
+th, td { padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+td { color: var(--text-2); }
+td b { color: var(--text); }
+code {
+  background: var(--code-bg); padding: 2px 7px; border-radius: 6px;
+  font-size: 12.5px; font-family: "JetBrains Mono", Menlo, Consolas, monospace;
+  color: var(--text);
+}
+pre {
+  background: var(--code-bg); border: 1px solid var(--line);
+  border-radius: 12px; padding: 18px; overflow-x: auto;
+  margin: 14px 0; font-size: 12.5px; line-height: 1.6;
+}
+pre code { background: none; padding: 0; }
+.tag {
+  display: inline-block; padding: 1px 9px; border-radius: 20px;
+  font-size: 11.5px; font-weight: 600;
+}
+.tag.p1 { background: #fee2e2; color: #b91c1c; }
+.tag.p2 { background: #fef3c7; color: #b45309; }
+.tag.p3 { background: #dbeafe; color: #1d4ed8; }
+.tag.core { background: #d1fae5; color: #047857; }
+@media (prefers-color-scheme: dark) {
+  .tag.p1 { background: #450a0a; color: #fca5a5; }
+  .tag.p2 { background: #451a03; color: #fcd34d; }
+  .tag.p3 { background: #172554; color: #93c5fd; }
+  .tag.core { background: #064e3b; color: #6ee7b7; }
+}
+
+/* ============ 卡片 MOCKUP（核心可视化） ============ */
+.mock-stage {
+  background: repeating-conic-gradient(var(--line) 0% 25%, transparent 0% 50%) 0 0/18px 18px;
+  border: 1px solid var(--line); border-radius: 14px;
+  padding: 26px; margin: 16px 0;
+  display: flex; flex-wrap: wrap; gap: 22px; align-items: center;
+}
+.mock-cap { width: 100%; font-size: 12.5px; color: var(--text-3); margin-top: -8px; }
+.hcard {
+  border-radius: 18px; padding: 14px 16px; user-select: none;
+  box-shadow: 0 4px 14px rgba(0,0,0,.12);
+  color: #fff; display: flex; flex-direction: column;
+  transition: background .3s;
+  position: relative; overflow: hidden;
+}
+.hcard.size-1x2 { width: 210px; height: 105px; border-radius: 14px; padding: 10px 14px; }
+.hcard.size-2x2 { width: 210px; height: 210px; }
+.hcard.size-2x4 { width: 430px; height: 210px; }
+.hcard.size-4x4 { width: 430px; height: 430px; }
+
+/* 主题变量组（演示用，三套） */
+.mock-theme-fresh .hcard { background: linear-gradient(135deg, #0ea472 0%, #10b981 60%, #34d399 100%); }
+.mock-theme-fresh .hcard .dim { color: rgba(255,255,255,.75); }
+.mock-theme-sakura .hcard { background: linear-gradient(135deg, #e879a9 0%, #f472b6 60%, #f9a8d4 100%); }
+.mock-theme-sakura .hcard .dim { color: rgba(255,255,255,.8); }
+.mock-theme-space .hcard { background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%); border: 1px solid #3b4657; }
+.mock-theme-space .hcard .dim { color: #94a3b8; }
+
+.hcard .row { display: flex; justify-content: space-between; align-items: center; }
+.hcard .lbl { font-size: 11px; opacity: .85; letter-spacing: 1px; }
+.hcard .countdown { font-size: 22px; font-weight: 800; }
+.hcard .countdown.urgent { color: #ffd166; }
+.hcard .cname { font-size: 19px; font-weight: 700; margin-top: auto; line-height: 1.3; }
+.hcard .cinfo { font-size: 12px; margin-top: 5px; }
+.hcard .dim { opacity: .95; font-size: 11.5px; }
+
+/* 今日列表 mockup */
+.hcard .day-title { font-size: 13px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,.3); padding-bottom: 7px; margin-bottom: 7px; }
+.hcard .day-title.hdr-dark { border-bottom: 1px solid rgba(255,255,255,.12); }
+.hcard .course-row {
+  display: flex; gap: 9px; align-items: center;
+  padding: 5.5px 8px; border-radius: 9px; font-size: 12.5px; margin-bottom: 2px;
+}
+.hcard .course-row.done { opacity: .48; text-decoration: line-through; }
+.hcard .course-row.now { background: rgba(255,255,255,.22); font-weight: 700; box-shadow: inset 3px 0 0 #ffd166; }
+.hcard .course-row .t { font-size: 11.5px; width: 42px; flex-shrink: 0; }
+.hcard .course-row .n { flex: 1; }
+.hcard .course-row .l { font-size: 11px; opacity: .85; }
+.hcard .more { font-size: 11px; text-align: right; opacity: .8; margin-top: 4px; }
+
+/* 周课表 mockup */
+.hcard .week-grid { display: grid; grid-template-columns: 18px repeat(7, 1fr); gap: 3px; flex: 1; margin-top: 8px; font-size: 10px; }
+.hcard .wg-h { text-align: center; font-weight: 700; opacity: .9; padding: 2px 0; }
+.hcard .wg-h.today { background: rgba(255,255,255,.25); border-radius: 6px; }
+.hcard .wg-cell { border-radius: 4px; min-height: 17px; }
+.hcard .wg-cell.c0 { background: rgba(255,255,255,.28); }
+.hcard .wg-cell.c1 { background: rgba(255,255,255,.45); }
+.hcard .wg-cell.now-line { position: relative; }
+.hcard .wg-cell.now-line::after {
+  content: ""; position: absolute; left: -2px; right: -2px; top: 50%;
+  border-top: 2px solid #ff5d5d;
+}
+.hcard .wg-num { color: rgba(255,255,255,.65); text-align: center; font-size: 9px; }
+
+/* 状态机示意图 */
+.flow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0; }
+.flow .st {
+  background: var(--paper); border: 2px solid var(--brand);
+  border-radius: 10px; padding: 8px 16px; font-size: 13px; font-weight: 600;
+  color: var(--text);
+}
+.flow .st small { display: block; font-weight: 400; color: var(--text-3); font-size: 11px; }
+.flow .ar { color: var(--text-3); font-size: 18px; }
+
+/* 色板 swatch */
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.sw { width: 66px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: var(--paper); }
+.sw .c { height: 44px; }
+.sw .t { font-size: 11px; text-align: center; padding: 5px 2px; color: var(--text-2); }
+.palette-row { display: flex; border-radius: 8px; overflow: hidden; height: 30px; margin: 8px 0; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.palette-row div { flex: 1; }
+
+/* 主题切换演示按钮 */
+.demo-tabs { display: flex; gap: 8px; margin: 14px 0 0; }
+.demo-tabs button {
+  border: 1px solid var(--line); background: var(--paper); color: var(--text-2);
+  padding: 6px 18px; border-radius: 20px; font-size: 13px; cursor: pointer;
+}
+.demo-tabs button.on { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 600; }
+
+/* 分层刷新图 */
+.layers { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+.layer {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 18px;
+}
+.layer .lv { font-size: 21px; font-weight: 800; color: var(--brand); width: 42px; flex-shrink: 0; }
+.layer .ld { flex: 1; }
+.layer .ld b { display: block; font-size: 14px; }
+.layer .ld span { font-size: 12.5px; color: var(--text-3); }
+.layer .badge { font-size: 12px; background: var(--brand-weak); color: var(--accent); padding: 3px 12px; border-radius: 14px; white-space: nowrap; font-weight: 600; }
+
+@media (max-width: 900px) {
+  aside { display: none; }
+  main { padding: 24px 18px 80px; }
+  .hcard.size-2x4, .hcard.size-4x4 { width: 340px; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside>
+  <h1>📅 SchoolCalendar</h1>
+  <div class="ver">产品设计文档 V1.0 · 2026-09-20 · 待审核</div>
+  <nav>
+    <a href="#c1">1. 产品概述</a>
+    <a href="#c1-4" class="sub">1.4 竞品差异化分析</a>
+    <a href="#c2">2. 用户故事总览</a>
+    <a href="#c3">3. 基础课表功能设计</a>
+    <a href="#c4">4. 桌面卡片体系设计 ★</a>
+    <a href="#c4-2" class="sub">4.2 卡片矩阵总览</a>
+    <a href="#c4-3" class="sub">4.3 三层刷新体系</a>
+    <a href="#c4-4" class="sub">4.4 卡片数据自治架构</a>
+    <a href="#c4-5" class="sub">4.5 「下一节课」卡片</a>
+    <a href="#c4-6" class="sub">4.6 「今日课程」卡片</a>
+    <a href="#c4-7" class="sub">4.7 「完整周课表」卡片</a>
+    <a href="#c4-8" class="sub">4.8 卡片空态与异常态</a>
+    <a href="#c5">5. 主题系统设计</a>
+    <a href="#c6">6. 系统日历同步与提醒</a>
+    <a href="#c7">7. 鸿蒙特性应用清单</a>
+    <a href="#c8">8. 信息架构与数据设计</a>
+    <a href="#c9">9. 版本规划</a>
+    <a href="#c10">10. 验收对照总表</a>
+    <a href="#c11">11. 附录：术语表</a>
+  </nav>
+</aside>
+<main>
+
+<div class="doc-meta">
+  <b>产品名称</b>：SchoolCalendar（课程表）　|　<b>目标平台</b>：HarmonyOS（API 23 / SDK 6.1.0(23)，phone / tablet / 2in1）<br>
+  <b>文档版本</b>：V1.0　|　<b>撰写日期</b>：2026-09-20　|　<b>状态</b>：待审核　|　<b>母版</b>：SchoolCalendar-产品设计文档.md（AI 阅读版）
+</div>
+
+<section id="c1">
+<h2>1. 产品概述</h2>
+
+<h3>1.1 产品定位</h3>
+<p>SchoolCalendar 是一款面向大学生的 <b>HarmonyOS 原生课程表应用</b>。应用内提供简洁高效的课表编辑与浏览体验；产品的差异化竞争力集中于<b>桌面卡片体系</b>——让学生不解锁手机、不打开应用，在桌面上一眼看到"<b>接下来最近的一节课是什么、在哪里、还有多久</b>"，并通过<b>预设主题包</b>实现应用与全部桌面卡片的同步换肤。</p>
+<blockquote><b>一句话定位：把课表放回桌面，把当下放进焦点。</b></blockquote>
+
+<h3>1.2 目标用户</h3>
+<table>
+<tr><th>维度</th><th>描述</th></tr>
+<tr><td>核心人群</td><td>中国大陆在校大学生（本科/高职），拥有 HarmonyOS 手机</td></tr>
+<tr><td>场景特征</td><td>每周 10-40 门次课程；作息时间因校而异；普遍存在单双周课程</td></tr>
+<tr><td>核心诉求</td><td>快速录入课表 → 桌面常看课表 → 课前快速决策（去哪、还来得及吗）</td></tr>
+<tr><td>设备环境</td><td>手机为主力（桌面卡片高频使用），部分用户有平板/折叠屏</td></tr>
+</table>
+
+<h3>1.3 核心价值主张</h3>
+<ol>
+<li><b>聚焦当下</b>：桌面卡片直接回答"下一节课是什么"，而非让用户在完整周课表里自行查找。</li>
+<li><b>分钟级实时</b>：倒计时随分钟自动更新、下课后高亮自动迁移——基于鸿蒙 TextClock 卡片能力，多数竞品做不到。</li>
+<li><b>个性表达</b>：8-10 套预设主题包，应用与桌面卡片一体化换肤，补齐竞品普遍缺失的主题自定义。</li>
+<li><b>系统级整合</b>：课表一键同步系统日历，由系统日历提供课前提醒，应用无需后台常驻。</li>
+</ol>
+
+<h3 id="c1-4">1.4 竞品差异化分析</h3>
+<p><b>竞品痛点（用户原述）</b>：市面课程表应用的桌面卡片"基本上都是仅显示一份完整的本周课程信息，无法直观看到今日、明日或接下来最近的一节课是什么，且缺乏主题自定义的能力"。</p>
+<table>
+<tr><th>能力维度</th><th>典型竞品桌面卡片</th><th>SchoolCalendar</th></tr>
+<tr><td>信息形态</td><td>仅完整周课表缩略</td><td><b>下一节课 / 今日课程 / 完整周课表</b> 三类卡片</td></tr>
+<tr><td>时间感知</td><td>静态快照，不随时间推进</td><td><b>分钟级自治</b>：倒计时更新、下课自动切换高亮、晚间自动前瞻明日</td></tr>
+<tr><td>今日/明日视角</td><td>无（需用户自行在周课表中定位）</td><td>今日课程卡片默认聚焦今日，晚间自动切换明日视角</td></tr>
+<tr><td>主题自定义</td><td>无或仅应用内换肤</td><td><b>应用 + 全部卡片同步换肤</b>，8-10 套预设主题包</td></tr>
+<tr><td>刷新智能性</td><td>依赖打开应用触发更新</td><td>三层刷新体系（主动 ≤5s / 定点对齐作息 / 分钟级自治）</td></tr>
+<tr><td>系统整合</td><td>应用内通知提醒（需后台）</td><td>系统日历同步 + 系统级课前提醒（零后台）</td></tr>
+</table>
+<blockquote><b>差异化护城河</b>：分钟级卡片自治能力依托鸿蒙 TextClock.onDateChange（API 11+ 卡片内可用）+ 卡片数据自治架构（详见 <a href="#c4-4">4.4</a>），该组合在当前竞品中未见实现，构成体验代差。</blockquote>
+</section>
+
+<section id="c2">
+<h2>2. 用户故事总览</h2>
+<table>
+<tr><th>#</th><th>用户故事</th><th>优先级</th><th>验收要点（摘要）</th></tr>
+<tr><td>US1</td><td>课程添加与课表编辑（含单双周、色板）</td><td><span class="tag p1">P1</span></td><td>含跨节/单双周课程正确呈现；每日节数 10→12 调整后网格正确扩展</td></tr>
+<tr><td>US2</td><td>周视图浏览与课程详情</td><td><span class="tag p1">P1</span></td><td>当日列高亮+时间线；周次切换单双周正确显隐；点击色块看详情</td></tr>
+<tr><td>US3</td><td>「下一节课」桌面卡片</td><td><span class="tag p1">P1</span></td><td>倒计时分钟级更新；下课 1 分钟内自动切换；晚间前瞻明日；空态引导</td></tr>
+<tr><td>US4</td><td>「今日课程」桌面卡片</td><td><span class="tag p1">P1</span></td><td>已结束置灰/进行中高亮/未开始正常；高亮 ≤1 分钟迁移；晚间切换明日视角</td></tr>
+<tr><td>US5</td><td>预设主题包同步换肤</td><td><span class="tag p2">P2</span></td><td>切换后全部卡片 ≤5 秒同步；深浅模式下均协调可读</td></tr>
+<tr><td>US6</td><td>「完整周课表」桌面卡片</td><td><span class="tag p2">P2</span></td><td>跨节色块合并；2×4/4×4 信息密度分层；点击直达周视图</td></tr>
+<tr><td>US7</td><td>系统日历同步与课前提醒</td><td><span class="tag p2">P2</span></td><td>专属账户+按周次展开重复日程；增量更新；提醒提前量可配置</td></tr>
+<tr><td>US8</td><td>深色模式与多设备适配</td><td><span class="tag p3">P3</span></td><td>深浅色实时切换；平板/折叠屏断点自适应</td></tr>
+</table>
+<p>完整验收场景与成功指标对照见<a href="#c10">第 10 章</a>。</p>
+</section>
+
+<section id="c3">
+<h2>3. 基础课表功能设计</h2>
+<blockquote>基础功能的目标是"好用简洁"：录入快、看着清、改着顺。本章覆盖 US1/US2，对应需求 FR-001~FR-005、FR-016。</blockquote>
+
+<h3>3.1 课程数据模型</h3>
+<table>
+<tr><th>属性</th><th>类型/取值</th><th>必填</th><th>说明</th></tr>
+<tr><td>课程名</td><td>文本，1-20 字</td><td>✅</td><td>如"高等数学 A(下)"</td></tr>
+<tr><td>教师</td><td>文本</td><td>—</td><td>如"王老师"</td></tr>
+<tr><td>地点</td><td>文本</td><td>—</td><td>如"教三-201"</td></tr>
+<tr><td>星期</td><td>1-7</td><td>✅</td><td>周一至周日</td></tr>
+<tr><td>节次</td><td>起止区间（如第 3-4 节）</td><td>✅</td><td>连续多节合并为跨节色块</td></tr>
+<tr><td>周次模式</td><td>全周 / 单周 / 双周 / 自定义</td><td>✅</td><td>自定义支持任意周次组合（如 1-8、11-16 周）</td></tr>
+<tr><td>颜色</td><td>色板槽位 0-9</td><td>✅</td><td>槽位语义跨主题稳定（见 <a href="#c5">5.2</a>）</td></tr>
+</table>
+<p><b>设计要点</b>：</p>
+<ul>
+<li>同一门课不同时段（如"高数"周一 1-2 节 + 周三 3-4 节）按 V1 简化模型录为<b>两条课程记录</b>（同色同名的视觉关联由用户保证），避免"课程-时段"二级模型带来的录入复杂度；远期版本可引入"同一课程多时段关联"。</li>
+<li><b>课程冲突检测</b>：保存时若与已有课程在同一周次×节次区间重叠，弹提示列出冲突课程，用户可选择"仍要保存"（旁听/补课场景）或返回修改。</li>
+</ul>
+
+<h3>3.2 课程添加与编辑</h3>
+<p><b>入口</b>：周视图主页右下角"+"悬浮按钮（新建）；点击课程色块 → 详情 → "编辑"（修改）。</p>
+<p><b>表单交互流</b>（新建示例）：</p>
+<ol>
+<li>课程名：文本输入框（必填校验，超 20 字截断提示）</li>
+<li>教师 / 地点：文本输入框（可选）</li>
+<li>颜色：横向色板选择器（10 色圆点，默认按"最少使用颜色"智能预选，避免新课撞色）</li>
+<li>星期 + 节次：七列节次网格选择器（点击起点格 → 点击终点格形成区间；支持跨节，不支持跨天）</li>
+<li>周次模式：四选一（全周 1-N / 单周 / 双周 / 自定义勾选）；自定义提供"1-8 周"区间快捷勾选</li>
+<li>保存 → 冲突检测 → 落库 → 周视图即时刷新 → 全部桌面卡片 ≤5 秒同步刷新</li>
+</ol>
+<p><b>编辑</b>：复用同一表单，预填已有值；删除需二次确认（AlertDialog），删除后同样触发卡片同步。</p>
+
+<h3>3.3 作息时间设置</h3>
+<p><b>入口</b>：主页右上角设置 → 作息设置。</p>
+<table>
+<tr><th>能力</th><th>交互</th><th>说明</th></tr>
+<tr><td>修改每节起止时间</td><td>时间选择器（时:分）</td><td>每节独立的开始/结束时间；相邻节次默认衔接推荐值</td></tr>
+<tr><td>调整每日节数</td><td>步进器（1-15 节）</td><td>增节：自动生成默认时间（基于现有末节推算 45 分钟课时+10 分钟课间）；减节：若有课程占用被删节次，弹提示让用户先处理受影响课程（禁止静默删除）</td></tr>
+<tr><td>恢复默认</td><td>单按钮</td><td>恢复内置大学作息模板（12 节）</td></tr>
+</table>
+<p><b>内置默认作息模板</b>（12 节，可整体修改）：</p>
+<table>
+<tr><th>节次</th><th>时间</th><th>节次</th><th>时间</th></tr>
+<tr><td>1</td><td>08:00-08:45</td><td>7</td><td>14:30-15:15</td></tr>
+<tr><td>2</td><td>08:55-09:40</td><td>8</td><td>15:20-16:05</td></tr>
+<tr><td>3</td><td>10:00-10:45</td><td>9</td><td>16:15-17:00</td></tr>
+<tr><td>4</td><td>10:55-11:40</td><td>10</td><td>17:05-17:50</td></tr>
+<tr><td>5</td><td>11:45-12:30</td><td>11</td><td>19:00-19:45</td></tr>
+<tr><td>6</td><td>14:00-14:45</td><td>12</td><td>19:50-20:35</td></tr>
+</table>
+<blockquote>作息模板是周视图行数、卡片"当前节次"判定、定点刷新时刻表的<b>唯一时间基准</b>；任何修改实时反映到全部界面与卡片。</blockquote>
+
+<h3>3.4 学期设置</h3>
+<table>
+<tr><th>字段</th><th>说明</th></tr>
+<tr><td>学期名</td><td>如"2026 秋季学期"，用于展示</td></tr>
+<tr><td>开学日期</td><td><b>第一周周一</b>的日期；当前教学周 = ⌊(今天 − 开学日期) / 7 天⌋ + 1</td></tr>
+<tr><td>总周数</td><td>默认 20，范围 1-30</td></tr>
+</table>
+<p><b>边界状态</b>：今天早于开学日期 → 全应用显示"距开学还有 N 天"；超过总周数 → "本学期已结束"；两种状态下卡片进入前瞻/引导态（见 <a href="#c4-8">4.8</a>）。</p>
+
+<h3>3.5 周视图主页（应用内首页）</h3>
+<p><b>布局</b>：</p>
+<pre><code>┌──────────────────────────────────────┐
+│  ‹  第 3 周  ›      [设置] [+ 添加]   │  ← 顶栏：周次切换 + 入口
+├────┬────┬────┬────┬────┬────┬────┬───┤
+│ 节 │ 一 │ 二 │ 三 │ 四 │ 五 │ 六 │ 日│  ← 星期表头（今日列高亮强调色）
+├────┼────┼────┼────┼────┼────┼────┼───┤
+│ 1  │████│    │    │███│    │    │   │  ← 课程色块（跨节合并）
+│ 2  │████│    │    │███│    │    │   │
+│ 3  │    │ ██ │    │    │    │    │   │  ← 时间线（当前时刻红线）
+│ ...│    │ ██ │    │    │    │    │   │
+└────┴────┴────┴────┴────┴────┴────┴───┘</code></pre>
+<p><b>交互</b>：</p>
+<ul>
+<li>左右滑动 / 顶栏箭头：切换周次（1 ~ 总周数）</li>
+<li>时间线：红色横线随当前时间落在对应节次行，仅本周视图显示</li>
+<li>今日列：表头高亮 + 列背景轻着色（仅本周视图）</li>
+<li>点击色块 → 课程详情（3.6）；长按色块 → 快捷菜单（编辑 / 删除）</li>
+</ul>
+<p><b>视觉</b>：色块圆角 8vp，块内展示课名（1 行截断）+ 地点（12fp 以下）；满课学期（≥35 门次）保证滑动 60fps。</p>
+
+<h3>3.6 课程详情</h3>
+<p>点击色块弹出半模态详情面板（bindSheet），内容：</p>
+<ul>
+<li>顶部：课程色条 + 课程名（大字）+ 颜色标识</li>
+<li>信息区：教师 / 地点 / 星期与节次 / 具体时间（取自作息模板）/ 周次模式（"第 1-16 周单周"）/ <b>本周是否上该课</b>（基于当前周次与周次模式即时判定，是最常被询问的信息）</li>
+<li>操作区：编辑 / 删除</li>
+</ul>
+</section>
+
+<section id="c4">
+<h2>4. 桌面卡片体系设计 <span class="tag core">差异化核心</span></h2>
+<blockquote>本章是产品差异化的核心。设计哲学：<b>竞品把"一张课表"放上桌面，我们把"当下与接下来的答案"放上桌面。</b></blockquote>
+
+<h3>4.1 设计理念："聚焦当下"</h3>
+<p>学生查看课表的高频真实问题排序：</p>
+<ol>
+<li>"下节课是什么？在哪？还有多久？"（每天 5-10 次，课间决策）</li>
+<li>"今天还有什么课？"（每天 2-3 次，规划当日）</li>
+<li>"明天/这周课多吗？"（每天 1 次以内，粗略规划）</li>
+</ol>
+<p>竞品的完整周课表卡片把三个问题全部丢给用户自行查找。SchoolCalendar 的卡片矩阵按问题优先级分层设计——<b>问题越高频，卡片越直接</b>：</p>
+<table>
+<tr><th>高频问题</th><th>对应卡片</th><th>回答方式</th></tr>
+<tr><td>下节课是什么？</td><td>「下一节课」</td><td>直接给出唯一答案 + 倒计时</td></tr>
+<tr><td>今天还有什么课？</td><td>「今日课程」</td><td>当日列表 + 当前位置高亮</td></tr>
+<tr><td>这周整体安排？</td><td>「完整周课表」</td><td>全周网格总览</td></tr>
+</table>
+
+<h3 id="c4-2">4.2 卡片矩阵总览</h3>
+<p><b>3 类卡片 × 6 个形态</b>（类型 × 尺寸组合）：</p>
+<table>
+<tr><th>卡片类型</th><th>1×2</th><th>2×2</th><th>2×4</th><th>4×4</th><th>定位</th></tr>
+<tr><td>下一节课</td><td>✅ 迷你态</td><td>✅ 标准态</td><td>—</td><td>—</td><td>唯一答案 + 倒计时</td></tr>
+<tr><td>今日课程</td><td>—</td><td>✅ 精简态</td><td>✅ 列表态</td><td>—</td><td>当日纵览 + 位置感</td></tr>
+<tr><td>完整周课表</td><td>—</td><td>—</td><td>✅ 紧凑态</td><td>✅ 完整态</td><td>全局总览</td></tr>
+</table>
+<table>
+<tr><th>尺寸</th><th>圆角</th><th>内容密度策略</th></tr>
+<tr><td>1×2</td><td>18vp</td><td>极简：倒计时数字 + 课名单行</td></tr>
+<tr><td>2×2</td><td>18vp</td><td>单主题聚焦：一节课的完整信息</td></tr>
+<tr><td>2×4</td><td>22vp</td><td>列表：纵向多行信息</td></tr>
+<tr><td>4×4</td><td>22vp</td><td>网格：完整周次结构</td></tr>
+</table>
+<p><b>默认尺寸</b>：下一节课 2×2 / 今日课程 2×4 / 周课表 4×4。<b>同类型多实例</b>：允许用户添加多张同类卡片，全部实例数据与主题一致生效。</p>
+
+<h4>📊 卡片视觉预览（CSS Mockup 还原）</h4>
+<p>以下为 6 形态卡片的视觉示意。点击切换主题，体验"应用与卡片一体化换肤"的差异化能力：</p>
+
+<div class="demo-tabs">
+  <button class="on" onclick="setMockTheme(this,'mock-theme-fresh')">清新薄荷</button>
+  <button onclick="setMockTheme(this,'mock-theme-sakura')">樱花粉</button>
+  <button onclick="setMockTheme(this,'mock-theme-space')">深空黑</button>
+</div>
+
+<div class="mock-stage mock-theme-fresh" id="mockAll">
+  <!-- 下一节课 1x2 -->
+  <div class="hcard size-1x2">
+    <div class="row"><span class="countdown">⏱ 23 分钟</span></div>
+    <div class="cname" style="font-size:15px">高等数学 A(下)</div>
+  </div>
+  <!-- 下一节课 2x2 -->
+  <div class="hcard size-2x2">
+    <div class="row"><span class="lbl">下一节课</span><span class="countdown">⏱ 23 分钟</span></div>
+    <div class="cname">高等数学 A(下)</div>
+    <div class="cinfo dim">08:00 · 教三-201</div>
+  </div>
+  <!-- 今日课程 2x2 -->
+  <div class="hcard size-2x2">
+    <div class="day-title">今日 · 9月21日 周一</div>
+    <div class="course-row now"><span class="t">10:00</span><span class="n">大学英语</span><span class="l">文B305</span></div>
+    <div class="course-row"><span class="t">14:00</span><span class="n">数据结构</span><span class="l">机房402</span></div>
+    <div class="course-row"><span class="t">19:00</span><span class="n">晚自习</span><span class="l">图书馆</span></div>
+  </div>
+  <div class="mock-cap">▲ 下一节课 1×2（迷你态）· 下一节课 2×2（标准态）· 今日课程 2×2（精简态）</div>
+
+  <!-- 今日课程 2x4 -->
+  <div class="hcard size-2x4">
+    <div class="day-title hdr-dark">今日 · 9月21日 周一</div>
+    <div class="course-row done"><span class="t">08:00</span><span class="n">高等数学 A(下)</span><span class="l">教三-201</span></div>
+    <div class="course-row now"><span class="t">10:00</span><span class="n">大学英语</span><span class="l">文B305</span></div>
+    <div class="course-row"><span class="t">14:00</span><span class="n">数据结构</span><span class="l">机房402</span></div>
+    <div class="course-row"><span class="t">16:15</span><span class="n">操作系统</span><span class="l">教一-105</span></div>
+    <div class="course-row"><span class="t">19:00</span><span class="n">晚自习</span><span class="l">图书馆</span></div>
+    <div class="more">高亮行 = 正在进行（下课 ≤1 分钟自动迁移）· 置灰 = 已结束</div>
+  </div>
+  <!-- 周课表 2x4 紧凑态 -->
+  <div class="hcard size-2x4">
+    <div class="day-title hdr-dark">第 3 周 · 今天 9/21</div>
+    <div class="week-grid" style="grid-template-columns: 1fr 1fr;">
+      <div>
+        <div class="wg-h today" style="margin-bottom:5px">今天 · 周一</div>
+        <div class="course-row" style="padding:4px 6px"><span class="t">08:00</span><span class="n">高数</span></div>
+        <div class="course-row" style="padding:4px 6px"><span class="t">10:00</span><span class="n">英语</span></div>
+        <div class="course-row" style="padding:4px 6px"><span class="t">14:00</span><span class="n">数据结构</span></div>
+      </div>
+      <div>
+        <div class="wg-h" style="margin-bottom:5px">明天 · 周二</div>
+        <div class="course-row" style="padding:4px 6px"><span class="t">08:00</span><span class="n">大学物理</span></div>
+        <div class="course-row" style="padding:4px 6px"><span class="t">14:00</span><span class="n">线代</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="mock-cap">▲ 今日课程 2×4（列表态）· 周课表 2×4（紧凑态：今明两列放大）</div>
+
+  <!-- 周课表 4x4 -->
+  <div class="hcard size-4x4">
+    <div class="row" style="margin-bottom:4px">
+      <span class="lbl" style="font-size:12px;font-weight:700">第 3 周</span>
+      <span class="dim">9/21 周一</span>
+    </div>
+    <div class="week-grid">
+      <div class="wg-h"></div><div class="wg-h today">一</div><div class="wg-h">二</div><div class="wg-h">三</div><div class="wg-h">四</div><div class="wg-h">五</div><div class="wg-h">六</div><div class="wg-h">日</div>
+      <div class="wg-num">1</div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c1"></div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c0"></div><div class="wg-cell c0"></div>
+      <div class="wg-num">2</div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c1"></div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c0"></div><div class="wg-cell c0"></div>
+      <div class="wg-num">3</div><div class="wg-cell now-line c0"></div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c1"></div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c1"></div>
+      <div class="wg-num">4</div><div class="wg-cell c0"></div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c1"></div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c1"></div>
+      <div class="wg-num">5</div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c0"></div><div class="wg-cell c1"></div><div class="wg-cell c0"></div>
+      <div class="wg-num">6</div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c0"></div><div class="wg-cell c0"></div><div class="wg-cell c0"></div>
+      <div class="wg-num">7</div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c1"></div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c0"></div><div class="wg-cell c0"></div>
+      <div class="wg-num">8</div><div class="wg-cell c0"></div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c1"></div><div class="wg-cell c1"></div><div class="wg-cell c0"></div><div class="wg-cell c0"></div>
+    </div>
+    <div class="dim" style="font-size:10px;margin-top:6px">色块 = 课程颜色（颜色即课程）· 红线 = 当前时刻 · 今日列高亮</div>
+  </div>
+  <div class="mock-cap">▲ 周课表 4×4（完整态：7 列迷你网格 + 时间线）　<span style="color:var(--danger)">↑ 红线示意当前时间位置</span></div>
+</div>
+
+<h3 id="c4-3">4.3 三层刷新体系</h3>
+<p>单靠任何一种刷新机制都无法同时满足"数据实时、跨天推进、分钟级体验"，故设计三层组合：</p>
+<div class="layers">
+  <div class="layer">
+    <div class="lv">L1</div>
+    <div class="ld"><b>主动层</b><span>应用内数据变更（增删改课程/改作息/换主题/改学期）→ formProvider.updateForm 遍历推送全部实例</span></div>
+    <div class="badge">≤ 5 秒 · 编辑即时生效</div>
+  </div>
+  <div class="layer">
+    <div class="lv">L2</div>
+    <div class="ld"><b>定点层</b><span>form_config.json 声明 scheduleUpdateTime（每日 ≤24 个时间点，取作息表中全部课程开始/结束时刻的并集）</span></div>
+    <div class="badge">对齐作息边界 · 跨天推进</div>
+  </div>
+  <div class="layer">
+    <div class="lv">L3</div>
+    <div class="ld"><b>自治层</b><span>卡片内 TextClock.onDateChange 回调（分钟级，API 11+ 卡片内可用）——倒计时更新、高亮迁移、今日↔明日视角切换</span></div>
+    <div class="badge">≤ 1 分钟 · 零配额消耗</div>
+  </div>
+</div>
+<p><b>配额约束下的设计纪律</b>（已核验官方文档）：</p>
+<ul>
+<li>定点刷新每日最多 24 个时间点 → 默认 12 节作息的全部边界理论上限 24 个，恰好覆盖；用户自定义作息超出 24 点时，取"课程实际占用节次"的边界并集（未被任何课程占用的节次边界不设点），由 L3 层兜底。</li>
+<li>定时刷新（updateDuration）每卡每日 50 次配额 → 本产品<b>不依赖定时刷新</b>，避免无效配额消耗。</li>
+<li>L3 层零配额消耗：TextClock 回调在卡片渲染进程内完成，不触发 updateForm。</li>
+</ul>
+
+<h3 id="c4-4">4.4 卡片数据自治架构</h3>
+<blockquote><b>核心思想</b>：与其让应用每分钟告诉卡片"现在该显示什么"，不如把"推演规则所需的全部上下文"一次性交给卡片，卡片自己每分钟算出"现在该显示什么"。</blockquote>
+<p><b>数据包（WidgetData）内容</b>：</p>
+<table>
+<tr><th>数据</th><th>用途</th></tr>
+<tr><td>学期基准（开学日期/总周数/当前周）</td><td>判断学期状态、单双周</td></tr>
+<tr><td>作息模板（各节起止时间）</td><td>当前节次定位、倒计时计算</td></tr>
+<tr><td>目标日课程集（今日 + 明日 + 前瞻日）</td><td>下一节课推算、今日列表渲染</td></tr>
+<tr><td>主题色值包（当前深浅色变体）</td><td>全部视觉渲染</td></tr>
+<tr><td>空态标记</td><td>引导态渲染</td></tr>
+</table>
+<p><b>数据流</b>：</p>
+<pre><code>[应用/卡片Extension 组装]
+        │  ①课程集+作息+学期+主题 → WidgetData（全量上下文）
+        ▼
+[卡片实例 收到数据] ──────────────┐
+        │ ②解析入本地 @State        │ L1 主动推送（数据变更 ≤5s）
+        ▼                          │ L2 定点推送（作息边界）
+[TextClock 每分钟回调]              │
+        │ ③本地重算：               │
+        │   当前节次/下一节课/       │
+        │   剩余分钟/高亮位置/       │
+        │   今日↔明日视角            │
+        ▼                          │
+[卡片渲染更新（零 IPC）] ◄──────────┘</code></pre>
+<p><b>收益</b>：</p>
+<ul>
+<li>分钟级体验与系统配额解耦（L3 零消耗）。</li>
+<li>应用被杀进程后，卡片仍能自治运转最长一个"数据包有效期"（到下一个 L2 定点刷新点）。</li>
+<li>同一份 WidgetData 结构服务全部 6 形态卡片，按 widgetType 取用所需字段。</li>
+</ul>
+
+<h3 id="c4-5">4.5 「下一节课」卡片详设</h3>
+<h4>2×2 标准态视觉</h4>
+<pre><code>┌────────────────────────┐
+│ 下一节课        ⏱ 23 分钟 │ ← 顶部：标签 + 倒计时（强调色）
+│                        │
+│ 高等数学 A(下)           │ ← 课名（18fp 加粗，最多 2 行）
+│                        │
+│ 08:00 · 教三-201        │ ← 开始时间 · 地点（12fp 次要色）
+└────────────────────────┘</code></pre>
+<ul>
+<li>背景：主题卡片背景色（cardBg）；倒计时数字用主题强调色（accent）。</li>
+<li>倒计时 ≤10 分钟时数字转为警示语义色（红系槽位），强化"快迟到了"的紧迫感。</li>
+</ul>
+<h4>1×2 迷你态视觉</h4>
+<p>极简两行：倒计时 + 课名（单行截断）；地点/时间省略（点击直达查看）。</p>
+<h4>四态状态机</h4>
+<div class="flow">
+  <div class="st">S1 倒计时态<small>开始前 · 分钟递减</small></div>
+  <div class="ar">→</div>
+  <div class="st">S2 进行中态<small>进行中 · 剩余下课分钟</small></div>
+  <div class="ar">→</div>
+  <div class="st">S3 前瞻态<small>今日课尽 · 明日/未来首课</small></div>
+</div>
+<div class="flow">
+  <div class="st" style="border-color:var(--text-3)">S4 空态引导<small>无数据 · 点击直达应用</small></div>
+</div>
+<table>
+<tr><th>状态</th><th>进入条件</th><th>展示内容</th></tr>
+<tr><td><b>S1 倒计时态</b></td><td>下一节课开始前</td><td>课名/地点/开始时间/剩余分钟（分钟级递减）</td></tr>
+<tr><td><b>S2 进行中态</b></td><td>当前时间 ∈ [开始, 结束)</td><td>显示本节课 + "进行中"标识 + 剩余下课分钟</td></tr>
+<tr><td><b>S3 前瞻态</b></td><td>本节课结束 → 自动推算下一个</td><td>无缝切换 S1（下一节）；今日全部结束 → 显示"明天 08:00 · 高等数学"（或下一个有课日，前瞻 ≤14 天）</td></tr>
+<tr><td><b>S4 空态引导</b></td><td>课表无数据 / 学期未配置</td><td>"打开应用，添加你的第一门课"，点击直达应用</td></tr>
+</table>
+<p><b>状态迁移全部由卡片内 TextClock 分钟回调驱动</b>。例：7:37 → S1（剩余 23 分钟）；8:00 → S2；8:45 → 下节课存在则 S1'，不存在则 S3；22:00 今日课尽 → S3 显示明日首课。</p>
+<p><b>跨天前瞻逻辑</b>：今日无课后，按"明日 → 后日 → …"逐日扫描有课日（最远 14 天），显示"<b>周三</b> 08:00 · 高等数学"格式（非今日日期必须带星期标注）。</p>
+<p><b>交互</b>：点击卡片（FormLink）→ 直达应用今日视图（<code>/?focus=today</code>）。</p>
+
+<h3 id="c4-6">4.6 「今日课程」卡片详设</h3>
+<h4>2×4 列表态视觉</h4>
+<pre><code>┌────────────────────────┐
+│ 今日 · 9月21日 周一       │ ← 日期标题（当前视角指示）
+├────────────────────────┤
+│ ✓ 08:00 高等数学  教三201 │ ← 已结束（置灰 + 删除线时间）
+│ ▶ 10:00 大学英语  文B305  │ ← 进行中（强调色高亮条 + 加粗）
+│   14:00 数据结构  机房402 │ ← 未开始（正常色）
+│   19:00 晚自习   图书馆   │
+└────────────────────────┘</code></pre>
+<ul>
+<li>每行结构：状态标记（可选）+ 时间 + 课名 + 地点。<b>进行中行</b>：左侧 4vp 强调色竖条 + 课名加粗；已结束行整体 60% 透明度。</li>
+<li>当日课程 > 5 门时滚动区显示前 5 门 + "还有 N 门"（保当前时间线附近课程优先）。</li>
+</ul>
+<h4>2×2 精简态视觉</h4>
+<p>2×2 空间仅展示 3 行：进行中/下一节优先。无进行中时显示"接下来"列表首 3 门。</p>
+<h4>视角状态机（今日 ↔ 明日）</h4>
+<table>
+<tr><th>状态</th><th>条件</th><th>内容</th></tr>
+<tr><td><b>今日视角</b></td><td>今日课程未全部结束</td><td>标题"今日 · M月d日 周X"，三态行渲染</td></tr>
+<tr><td><b>明日视角</b></td><td>今日全部课程结束（晚间）</td><td>标题"明天 · M月d日 周X"，明日课程全部按"未开始"渲染</td></tr>
+<tr><td><b>前瞻视角</b></td><td>明日也无课</td><td>"周三 · M月d日"（下一个有课日，≤14 天）</td></tr>
+<tr><td><b>空态</b></td><td>无任何课程数据</td><td>"今天没有课 ☀️" + 下一有课日首节课提示</td></tr>
+</table>
+<ul>
+<li>视角切换同样由 TextClock 回调驱动（最后一节课结束的下一分钟内完成）。</li>
+<li>今日视角下若当前无课（课间），行间无高亮，下一节课行前置"⏱ 剩 N 分钟"微标记。</li>
+</ul>
+<p><b>交互</b>：点击卡片 → 直达应用今日视图。</p>
+
+<h3 id="c4-7">4.7 「完整周课表」卡片详设</h3>
+<h4>4×4 完整态视觉</h4>
+<ul>
+<li>迷你网格：7 列（星期）× N 行（节次，跟随作息模板）；课程色块以课程色板着色，跨节合并。</li>
+<li>色块内不放文字（密度过高），<b>颜色即课程</b>——与用户在应用内设置的色板槽位一致。</li>
+<li>顶部周次随 L2 定点刷新跨周推进；时间线由 TextClock 分钟级驱动；今日列：表头高亮 + 列轻着色。</li>
+</ul>
+<h4>2×4 紧凑态视觉</h4>
+<ul>
+<li>高度有限：仅显示"今天 + 明天"两列放大版（列宽加倍，可显示课名缩写），兼顾"周总览"与"可读性"。</li>
+<li>顶部周次 + 今日日期。</li>
+</ul>
+<p><b>交互</b>：点击 4×4 → 直达应用当前周视图；点击 2×4 → 直达今日视图。</p>
+
+<h3 id="c4-8">4.8 卡片空态与异常态设计（全类型统一）</h3>
+<table>
+<tr><th>场景</th><th>表现</th><th>点击行为</th></tr>
+<tr><td>课表无课程</td><td>"打开应用，添加你的第一门课" + 应用图标</td><td>直达应用（落地即引导）</td></tr>
+<tr><td>学期未配置</td><td>"设置开学日期，开始使用"</td><td>直达学期设置页</td></tr>
+<tr><td>学期未开始</td><td>"距开学还有 N 天" + 首日首课预告</td><td>直达周视图</td></tr>
+<tr><td>学期已结束</td><td>"本学期已结束"</td><td>直达周视图（可查看归档课表）</td></tr>
+<tr><td>深色模式</td><td>全部色值自动切换主题深色变体</td><td>—</td></tr>
+</table>
+<blockquote><b>设计纪律</b>：卡片永不白屏、永不显示过期数据不标注。数据包过期（超过 24 小时未获推送）时在角落显示"·"大小的刷新提示点，点击拉起应用触发全量刷新。</blockquote>
+</section>
+
+<section id="c5">
+<h2>5. 主题系统设计</h2>
+<blockquote>主题是用户明确指出的竞品缺失点。设计目标：<b>一次选择，应用与桌面所有卡片同时换新。</b></blockquote>
+
+<h3>5.1 预设主题包清单（V1 共 10 套）</h3>
+<table>
+<tr><th>ID</th><th>名称</th><th>风格定位</th><th>浅色主色</th><th>深色可用</th></tr>
+<tr><td><code>fresh_green</code></td><td>清新薄荷</td><td>默认 · 日系清新</td><td><div class="palette-row" style="width:110px;height:22px"><div style="background:#10b981"></div><div style="background:#d1fae5"></div><div style="background:#0e9f6e"></div></div></td><td>✅</td></tr>
+<tr><td><code>sakura_pink</code></td><td>樱花粉</td><td>柔和 · 春日</td><td><div class="palette-row" style="width:110px;height:22px"><div style="background:#f472b6"></div><div style="background:#fbcfe8"></div><div style="background:#db2777"></div></div></td><td>✅</td></tr>
+<tr><td><code>deep_space</code></td><td>深空黑</td><td>极致深色 · 沉浸</td><td><div class="palette-row" style="width:110px;height:22px"><div style="background:#0f172a"></div><div style="background:#1e293b"></div><div style="background:#334155"></div></div></td><td>✅（深色专属设计）</td></tr>
+<tr><td><code>aurora_purple</code></td><td>渐变紫</td><td>极光 · 时尚</td><td><div class="palette-row" style="width:110px;height:22px"><div style="background:#8b5cf6"></div><div style="background:#ede9fe"></div><div style="background:#7c3aed"></div></div></td><td>✅</td></tr>
+<tr><td><code>minimal_white</code></td><td>极简白</td><td>无印 · 性冷淡</td><td><div class="palette-row" style="width:110px;height:22px"><div style="background:#ffffff;border-right:1px solid #e5e7eb"></div><div style="background:#f3f4f6"></div><div style="background:#111827"></div></div></td><td>✅</td></tr>
+<tr><td><code>lemon_yellow</code></td><td>柠檬黄</td><td>明快 · 活力</td><td><div class="palette-row" style="width:110px;height:22px"><div style="background:#facc15"></div><div style="background:#fef9c3"></div><div style="background:#ca8a04"></div></div></td><td>✅</td></tr>
+<tr><td><code>ocean_blue</code></td><td>海空蓝</td><td>经典 · 通透</td><td><div class="palette-row" style="width:110px;height:22px"><div style="background:#0ea5e9"></div><div style="background:#e0f2fe"></div><div style="background:#0284c7"></div></div></td><td>✅</td></tr>
+<tr><td><code>sunset_orange</code></td><td>落日橙</td><td>温暖 · 黄昏</td><td><div class="palette-row" style="width:110px;height:22px"><div style="background:#fb923c"></div><div style="background:#ffedd5"></div><div style="background:#ea580c"></div></div></td><td>✅</td></tr>
+<tr><td><code>academy_green</code></td><td>墨绿学院</td><td>复古 · 学院风</td><td><div class="palette-row" style="width:110px;height:22px"><div style="background:#166534"></div><div style="background:#dcfce7"></div><div style="background:#14532d"></div></div></td><td>✅</td></tr>
+<tr><td><code>cherry_red</code></td><td>樱桃红</td><td>热烈 · 高对比</td><td><div class="palette-row" style="width:110px;height:22px"><div style="background:#ef4444"></div><div style="background:#fee2e2"></div><div style="background:#b91c1c"></div></div></td><td>✅</td></tr>
+</table>
+
+<h3>5.2 色值体系</h3>
+<p>每套主题定义两组同构色板（浅色变体 / 深色变体）：</p>
+<table>
+<tr><th>色槽</th><th>用途</th></tr>
+<tr><td>bg</td><td>应用页面背景</td></tr>
+<tr><td>cardBg</td><td>卡片背景 / 应用内卡片容器</td></tr>
+<tr><td>textPrimary</td><td>主文字</td></tr>
+<tr><td>textSecondary</td><td>次要文字</td></tr>
+<tr><td>accent</td><td>强调色（倒计时/高亮条/按钮）</td></tr>
+<tr><td>coursePalette[10]</td><td>课程色板：红 / 橙 / 黄 / 绿 / 青 / 蓝 / 紫 / 粉 / 棕 / 灰 各一槽位</td></tr>
+</table>
+<p><b>课程色板示意</b>（清新薄荷 · 浅色变体）：</p>
+<div class="palette-row">
+  <div style="background:#ef4444" title="红"></div><div style="background:#f97316" title="橙"></div><div style="background:#eab308" title="黄"></div><div style="background:#22c55e" title="绿"></div><div style="background:#06b6d4" title="青"></div><div style="background:#3b82f6" title="蓝"></div><div style="background:#8b5cf6" title="紫"></div><div style="background:#ec4899" title="粉"></div><div style="background:#a16207" title="棕"></div><div style="background:#9ca3af" title="灰"></div>
+</div>
+<p style="font-size:12.5px;color:var(--text-3)">槽位 0-9 依次为：红 · 橙 · 黄 · 绿 · 青 · 蓝 · 紫 · 粉 · 棕 · 灰</p>
+<p><b>课程颜色槽位语义</b>：<code>colorIndex</code> 槽位（0-9）在<b>所有主题下保持语义稳定</b>——用户为"高数"选了槽位 3（绿系），无论切换到哪套主题，高数始终是"那门绿课"（色值随主题微调，色系不变）。这样换肤不破坏用户已建立的"颜色↔课程"心智。</p>
+<p><b>深色模式课程色</b>：每套主题的深色变体对 coursePalette 单独调校（降饱和、提亮度），避免亮色刺眼或暗色不可见。</p>
+
+<h3>5.3 换肤机制</h3>
+<pre><code>用户在主题页选择新主题
+        │
+        ├─→ ① Preferences 更新 currentThemeId（持久化）
+        │
+        └─→ ② ThemeService 读取新主题 → WidgetRefreshService
+                │
+                └─→ ③ 遍历全部卡片实例 formProvider.updateForm
+                        （WidgetData 携带新主题色值包）
+                        │
+                        └─→ ④ 全部卡片 ≤5 秒呈现新主题</code></pre>
+<ul>
+<li><b>应用内</b>：主题切换即时生效（当前页面无刷新感知，全局色值来自统一主题状态）。</li>
+<li><b>卡片</b>：色值作为数据下发，卡片渲染零硬编码色——新增主题 = 新增一条主题定义数据，<b>零代码改动</b>。</li>
+<li><b>卡片深浅色</b>：数据包按"卡片添加时刻的系统深浅色"携带对应变体；系统深浅色切换后，卡片在下一次任意层刷新时自动切换变体。</li>
+</ul>
+
+<h3>5.4 主题页设计</h3>
+<ul>
+<li>主题卡片网格：每套主题以"迷你课表预览"呈现（2×2 卡片 mock + 应用首页缩略同色系），所见即所得。</li>
+<li>当前主题高亮标注；点击即切换（无需确认，切换成本极低鼓励尝试）。</li>
+<li>页面内嵌 FormMenu 组件（API 18+）：长按任意预览卡片可"添加到桌面"，引导用户在选完主题后顺手把卡片放上桌面。</li>
+</ul>
+</section>
+
+<section id="c6">
+<h2>6. 系统日历同步与课前提醒</h2>
+<blockquote>让学生不依赖本应用后台也能收到上课提醒——由系统日历完成提醒，应用只负责写入与维护。</blockquote>
+
+<h3>6.1 功能设计</h3>
+<table>
+<tr><th>功能点</th><th>设计</th></tr>
+<tr><td>同步开关</td><td>设置页"同步到系统日历"开关（默认关闭）</td></tr>
+<tr><td>日历账户</td><td>开启时创建应用专属日历账户（如"SchoolCalendar 课表"），与用户个人日历隔离，互不污染</td></tr>
+<tr><td>课前提醒</td><td>日程自带提醒，提前量可配置：5 / 10 / 15 / 30 分钟（默认 15）</td></tr>
+<tr><td>增量维护</td><td>课程增删改 / 作息修改 / 提醒提前量变更后，用户再次进入同步页或手动点"立即同步"时，<b>全量重建</b>本账户日程（先清后写）</td></tr>
+<tr><td>关闭同步</td><td>删除整个专属日历账户及其全部日程，课表数据不受影响</td></tr>
+</table>
+
+<h3>6.2 课程 → 日历日程映射规则</h3>
+<table>
+<tr><th>课表概念</th><th>日历日程字段</th></tr>
+<tr><td>一门课程（某周次模式下）</td><td>一条<b>重复日程</b></td></tr>
+<tr><td>开学日期 + 周次模式</td><td>RRULE 周重复 + 按"周次展开"生成各次发生时间</td></tr>
+<tr><td>单双周 / 自定义周次</td><td>展开为具体日期集合（不满足 RRULE 规则的日期以 EXDATE 剔除）</td></tr>
+<tr><td>上课时间（作息模板）</td><td>日程开始时间（下课时间 = 开始 + 课时分钟，日程时长仅示意）</td></tr>
+<tr><td>课名 / 教师 / 地点</td><td>日程标题"课名 · 地点" / 备注"教师：XXX"</td></tr>
+<tr><td>课前提醒提前量</td><td>日程提醒时间 = 开始时间 − 提前量</td></tr>
+</table>
+<blockquote><b>为什么全量重建而非逐条 diff</b>：课程数据量小（≤40 门次 → 数百个日程实例），全量重建耗时可控（秒级）；换取实现简单与强一致——不存在"日历里残留已删课程"的脏数据状态。此为已确认的架构决策（plan.md D6）。</blockquote>
+
+<h3>6.3 权限与体验设计</h3>
+<ul>
+<li><b>权限</b>：<code>ohos.permission.READ_CALENDAR</code> + <code>ohos.permission.WRITE_CALENDAR</code>，<b>运行时按需申请</b>——仅在用户首次打开同步开关时弹窗，未开启同步的用户全程无感知。</li>
+<li><b>拒绝后的引导</b>：权限被拒 → 非阻断提示"开启日历权限后才能同步课表"，提供"前往设置"入口；同步功能保持关闭态，其余功能不受影响。</li>
+<li><b>系统日历侧体验</b>：学生在系统日历 App 中看到专属账户的课表周视图，获得系统级提醒通知（锁屏/通知中心/日历 App 内），与本应用提醒体验一致。</li>
+<li><b>选择 Calendar Kit 而非代理提醒的原因</b>：代理提醒（reminderAgentManager）需邮件申请权限且仅对工具类应用开放，官方 FAQ 明确推荐 Calendar Kit 日程提醒作为替代（已核验）；同时日历日程对学生还有"在日历中直接查看"的附加价值。</li>
+</ul>
+</section>
+
+<section id="c7">
+<h2>7. 鸿蒙特性应用清单</h2>
+<blockquote>本产品为 HarmonyOS 原生设计，特性选型全部经官方文档核验。分为"采用"与"明确不采用"两张清单——后者同样重要，它界定了技术可行性边界，避免设计承诺落空。</blockquote>
+
+<h3>7.1 采用的鸿蒙特性 — 功能映射总表</h3>
+<table>
+<tr><th>#</th><th>特性</th><th>Kit/API</th><th>应用的功能点</th><th>关键约束（已核验）</th></tr>
+<tr><td>1</td><td>ArkTS 卡片（静态卡片）</td><td>Form Kit</td><td>全部 6 形态桌面卡片的载体</td><td>静态卡片内存占用小；支持 TextClock/条件渲染/FormLink</td></tr>
+<tr><td>2</td><td><b>TextClock.onDateChange</b></td><td>ArkUI（API 11+ 卡片内可用）</td><td><b>分钟级倒计时 / 高亮迁移 / 今日↔明日切换</b>（差异化核心）</td><td>回调间隔为分钟级；组件不可见时不回调——用于自治刷新恰好</td></tr>
+<tr><td>3</td><td>定点刷新 scheduleUpdateTime</td><td>Form Kit（form_config.json）</td><td>L2 层：对齐作息边界的跨天数据推进</td><td>每日最多 24 个时间点</td></tr>
+<tr><td>4</td><td>卡片主动刷新 updateForm</td><td>Form Kit（formProvider）</td><td>L1 层：数据变更 ≤5 秒推送到全部实例</td><td>配额：每卡每日 50 次（本产品按需使用）</td></tr>
+<tr><td>5</td><td>FormLink</td><td>ArkUI 卡片交互组件</td><td>全部卡片"点击直达应用对应页面"</td><td>静态卡片唯一交互通道，符合本产品需求</td></tr>
+<tr><td>6</td><td>FormMenu / AddFormMenuItem</td><td>ArkUI（API 18+）</td><td>主题页长按预览"添加卡片到桌面"引导</td><td>项目 API 23 满足版本要求</td></tr>
+<tr><td>7</td><td>FormExtensionAbility</td><td>Form Kit</td><td>卡片生命周期管理 + 数据组装</td><td>与主应用同沙箱，可共读 RDB</td></tr>
+<tr><td>8</td><td>Calendar Kit（calendarManager）</td><td>日历服务</td><td>课表 → 系统日历专属账户重复日程、课前提醒</td><td>需 READ_CALENDAR + WRITE_CALENDAR 运行时权限</td></tr>
+<tr><td>9</td><td>关系型数据库（RDB）</td><td>ArkData</td><td>课程/作息/学期结构化存储；卡片进程直接读取</td><td>主应用与卡片 Extension 共享应用沙箱</td></tr>
+<tr><td>10</td><td>用户首选项（Preferences）</td><td>ArkData</td><td>主题 ID / 提醒提前量 / 同步状态等轻量配置</td><td>—</td></tr>
+<tr><td>11</td><td>Navigation</td><td>ArkUI</td><td>应用路由（系统返回/转场统一）</td><td>主页为页栈根，编辑/设置页 push</td></tr>
+<tr><td>12</td><td>状态管理 V2（@ObservedV2/@Trace 等）</td><td>ArkUI</td><td>周视图/卡片数据包的响应式渲染</td><td>API 12+ 稳定，项目 API 23</td></tr>
+<tr><td>13</td><td>Grid / GridItem</td><td>ArkUI</td><td>周视图网格（行列随节数动态生成）</td><td>适配"每日节数 1-15 可调"</td></tr>
+<tr><td>14</td><td>bindSheet 半模态</td><td>ArkUI</td><td>课程详情面板</td><td>—</td></tr>
+<tr><td>15</td><td>深色模式</td><td>应用配置 onConfigurationUpdate</td><td>应用实时跟随；卡片携带深浅色变体数据</td><td>色值全链路主题化，零硬编码色</td></tr>
+<tr><td>16</td><td>一多断点适配</td><td>ArkUI（sm/md/lg）</td><td>手机/折叠屏/平板自适应布局</td><td>手机竖屏为设计基线</td></tr>
+<tr><td>17</td><td>AlertDialog（UIContext）</td><td>ArkUI</td><td>删除课程二次确认、冲突提示</td><td>—</td></tr>
+</table>
+
+<h3>7.2 明确不采用的特性及理由</h3>
+<table>
+<tr><th>特性</th><th>不采用理由（已核验官方文档）</th></tr>
+<tr><td><b>实况窗 Live View Kit</b></td><td>官方仅对出行打车、即时配送、运动锻炼、导航等场景开放申请，且需企业开发者账号；课程表场景<b>不在开放范围</b>。若未来开放"课程/教育"场景，"进行中的课"是天然的实况窗候选，列入远期观察</td></tr>
+<tr><td><b>代理提醒 reminderAgentManager</b></td><td>需邮件申请权限且仅工具类应用可申请，管控严格；官方 FAQ 推荐 Calendar Kit 日程提醒替代——已按此执行</td></tr>
+<tr><td><b>动态卡片（Live Form）</b></td><td>支持丰富交互动效但内存占用大；课程表卡片无滑动/自定义动效需求，静态卡片 + FormLink 完全够用，选择内存友好方案</td></tr>
+<tr><td><b>Push Kit 云侧刷新</b></td><td>本产品无服务端，全部数据本地产生；云推能力属远期"多设备云同步"范畴</td></tr>
+<tr><td><b>分布式数据同步（ArkData 分布式）</b></td><td>V1 单设备本地存储；跨设备课表同步列入远期版本（可信组网设备间 RDB 同步是现成路径）</td></tr>
+<tr><td><b>元服务形态</b></td><td>V1 为普通应用；元服务版（免安装卡片直达）列入远期评估</td></tr>
+</table>
+</section>
+
+<section id="c8">
+<h2>8. 信息架构与数据设计</h2>
+
+<h3>8.1 页面清单与路由</h3>
+<table>
+<tr><th>路由</th><th>页面</th><th>说明</th></tr>
+<tr><td><code>/</code></td><td>周视图主页（Index）</td><td>应用首页；卡片深链参数 <code>?focus=today</code> 时滚动定位今日列</td></tr>
+<tr><td><code>/CourseEdit?courseId=</code></td><td>课程编辑页</td><td>缺省新建，带 id 为编辑</td></tr>
+<tr><td><code>/ScheduleSetting</code></td><td>作息设置页</td><td>每节起止时间 + 每日节数</td></tr>
+<tr><td><code>/SemesterSetting</code></td><td>学期设置页</td><td>开学日期 + 总周数 + 学期名</td></tr>
+<tr><td><code>/Theme</code></td><td>主题选择页</td><td>主题网格 + FormMenu 添加卡片引导</td></tr>
+<tr><td><code>/Settings</code></td><td>设置聚合页</td><td>日历同步 / 提醒提前量 / 卡片管理入口</td></tr>
+</table>
+<p><b>卡片深链映射</b>：下一节课卡片 / 今日课程卡片 → <code>/?focus=today</code>；周课表卡片 → <code>/?focus=week</code>（默认即周视图）。</p>
+
+<h3>8.2 数据模型（4 表 + 配置）</h3>
+<table>
+<tr><th>表/存储</th><th>字段要点</th><th>说明</th></tr>
+<tr><td>course</td><td>id, name, teacher, location, dayOfWeek(1-7), startSection, endSection, weekPattern(all/odd/even/custom), weeksMask, colorIndex(0-9), semesterId, createdAt, updatedAt</td><td>weeksMask 仅 custom 模式使用（周次集合序列化）</td></tr>
+<tr><td>section_time</td><td>sectionNo(1-15, PK), startTime, endTime</td><td>全局唯一一份作息模板</td></tr>
+<tr><td>semester</td><td>id, name, startDate, totalWeeks, isActive</td><td>V1 单学期，isActive 恒真</td></tr>
+<tr><td>Preferences</td><td>currentThemeId / reminderMinutes(默认15) / calendarSyncEnabled / calendarAccountName</td><td>轻量配置</td></tr>
+</table>
+<p><b>核心推导逻辑</b>（不落库，实时计算，单一数据源避免状态不同步）：</p>
+<ul>
+<li><b>当前教学周</b> = ⌊(今天 − 开学日期) / 7 天⌋ + 1；边界：未开学 / 已结束两态</li>
+<li><b>某日有效课程集</b> = 按 (dayOfWeek 匹配) ∧ (周次模式含当前周) 过滤</li>
+<li><b>下一节课推算</b> = 定位当前时刻所在节次 → 当日有效课程集中寻找 startSection ≥ 当前节次的最近候选 → 无则逐日前瞻（≤14 天）</li>
+<li><b>卡片视角状态机</b> = 今日未开始 → 进行中 → 已结束 → 明日/前瞻，TextClock 分钟回调驱动迁移（详见 4.5/4.6）</li>
+</ul>
+
+<h3>8.3 服务层职责</h3>
+<table>
+<tr><th>服务</th><th>职责</th></tr>
+<tr><td>ScheduleService</td><td>课表纯计算引擎：当前周 / 某日课程 / 下一节课推算 / 单双周过滤</td></tr>
+<tr><td>WidgetRefreshService</td><td>卡片实例管理：遍历全部实例 updateForm；变更事件按范围（课程/作息/主题/学期）分发刷新</td></tr>
+<tr><td>ThemeService</td><td>主题定义读取、切换、持久化、联动卡片刷新</td></tr>
+<tr><td>CalendarSyncService</td><td>日历账户创建 / 日程全量重建 / 账户删除</td></tr>
+<tr><td>ReminderSettingService</td><td>提醒提前量管理，变更触发日历重建</td></tr>
+</table>
+<p><b>数据变更广播约定</b>：DAO 层变更后调用 <code>WidgetRefreshService.notifyDataChanged(scope)</code>，scope ∈ {courses, schedule, theme, semester}。</p>
+
+<h3>8.4 性能目标</h3>
+<table>
+<tr><th>指标</th><th>目标</th></tr>
+<tr><td>周视图滑动</td><td>60fps，满课学期（≥35 门次）无卡顿感知</td></tr>
+<tr><td>主动卡片刷新</td><td>数据变更 → 全部卡片实例更新完成 ≤5 秒</td></tr>
+<tr><td>卡片分钟级切换</td><td>课程开始/结束后 ≤1 分钟完成状态迁移</td></tr>
+<tr><td>应用冷启动</td><td>周视图可交互 ≤2 秒</td></tr>
+<tr><td>日历全量重建</td><td>≤40 门次课程 ≤5 秒完成</td></tr>
+</table>
+
+<h3>8.5 一多适配与深色模式</h3>
+<table>
+<tr><th>断点</th><th>设备</th><th>布局策略</th></tr>
+<tr><td>sm</td><td>手机竖屏（基线）</td><td>底部无 Tab（单主页+push 层级），课程块字号 12-14fp</td></tr>
+<tr><td>md</td><td>折叠屏展开 / 小平板</td><td>网格舒展，字号 14-16fp</td></tr>
+<tr><td>lg</td><td>平板 / 2in1</td><td>字号 16fp，课程块内联显示教师+地点</td></tr>
+</table>
+<ul>
+<li>卡片不参与断点（桌面统一渲染），各尺寸卡片内容密度独立设计（4.2）。</li>
+<li>深色模式：应用内实时跟随系统；卡片按"数据包携带深浅色变体 + 刷新时切换"策略，配合全链路主题色值，杜绝硬编码色在深色模式成亮块的问题。</li>
+</ul>
+</section>
+
+<section id="c9">
+<h2>9. 版本规划</h2>
+
+<h3>9.1 V1（本文档设计范围）</h3>
+<table>
+<tr><th>模块</th><th>范围</th></tr>
+<tr><td>基础课表</td><td>课程 CRUD / 单双周 / 自定义周次 / 作息时间与每日节数调整 / 学期设置 / 周视图与详情</td></tr>
+<tr><td>桌面卡片</td><td>3 类 × 6 形态全量 + 三层刷新体系 + 空态异常态</td></tr>
+<tr><td>主题</td><td>10 套预设主题包，应用与卡片同步换肤</td></tr>
+<tr><td>系统整合</td><td>日历同步 + 课前提醒（5/10/15/30 分钟可配）</td></tr>
+<tr><td>体验基线</td><td>深色模式 / 一多适配（sm/md/lg）/ FormMenu 添加引导</td></tr>
+</table>
+
+<h3>9.2 V1.1 候选（按用户反馈提级评估）</h3>
+<ul>
+<li><b>课表图片导出分享</b>（"晒课表"社交需求，含主题美化渲染）</li>
+<li>主题扩充至 12+ 套；节日限定主题</li>
+<li>2×4 今日卡片"还有 N 门"展开交互优化</li>
+</ul>
+
+<h3>9.3 远期路线</h3>
+<table>
+<tr><th>能力</th><th>技术路径</th><th>前置条件</th></tr>
+<tr><td>多学期管理（归档 + 开新表）</td><td>semester 表 isActive 多值化</td><td>V1 用户留存验证</td></tr>
+<tr><td>跨设备课表同步</td><td>ArkData 分布式 RDB 同步（可信组网）</td><td>多设备用户占比验证</td></tr>
+<tr><td>云端同步 + 华为账号</td><td>华为账号 + 云空间路径</td><td>服务端建设</td></tr>
+<tr><td>元服务版（免安装卡片）</td><td>元服务工程形态</td><td>元服务卡片生态成熟度</td></tr>
+<tr><td>自定义主题色（逐色槽自定义）</td><td>ThemeDef 数据化已就绪</td><td>主题使用数据验证</td></tr>
+<tr><td>教务系统课表导入</td><td>教务 HTML/图片解析</td><td>覆盖率与维护成本评估</td></tr>
+<tr><td>实况窗"进行中的课"</td><td>Live View Kit</td><td><b>官方开放课程/教育类场景</b>（当前不开放，持续观察）</td></tr>
+</table>
+</section>
+
+<section id="c10">
+<h2>10. 验收对照总表</h2>
+<blockquote>用户故事 × 关键验收场景 × 成功指标三位一体，作为 V1 验收基准。</blockquote>
+<table>
+<tr><th>US</th><th>关键验收场景（节选）</th><th>成功指标</th></tr>
+<tr><td>US1 课程编辑</td><td>跨节课程正确合并；单双周按周显隐；节数 10→12 网格扩展；缩节数时受影响课程提示</td><td>新用户首课添加 ≤3 分钟</td></tr>
+<tr><td>US2 周视图</td><td>今日列高亮+时间线；周次切换正确；详情含"本周是否上该课"</td><td>浏览操作即时响应，滑动流畅</td></tr>
+<tr><td>US3 下一节课卡片</td><td>倒计时分钟递减；8:00 开课卡片自动切换；晚间前瞻明日；空态引导</td><td>卡片识别"下节课信息" ≤3 秒；状态切换 ≤1 分钟</td></tr>
+<tr><td>US4 今日课程卡片</td><td>三态行渲染正确；下课后高亮 ≤1 分钟迁移；晚间自动切明日视角</td><td>同上</td></tr>
+<tr><td>US5 主题换肤</td><td>切换后全部卡片 ≤5 秒同步；深浅色均协调</td><td>主题切换 ≤5 秒全卡片生效</td></tr>
+<tr><td>US6 周课表卡片</td><td>跨节色块合并；2×4/4×4 密度分层；点击直达周视图</td><td>卡片渲染正确无截断</td></tr>
+<tr><td>US7 日历同步</td><td>专属账户+按周次展开；课程变更后重建；关闭即清理；提醒按提前量触发</td><td>提醒到达率 ≥99%（设备正常前提）</td></tr>
+<tr><td>US8 深色/一多</td><td>深浅色实时切换；平板布局自适应</td><td>两模式下内容可读，无亮块/不可见</td></tr>
+</table>
+</section>
+
+<section id="c11">
+<h2>11. 附录：术语表</h2>
+<table>
+<tr><th>术语</th><th>定义</th></tr>
+<tr><td>卡片形态</td><td>卡片类型 × 尺寸的组合（如"下一节课 2×2"），共 6 个</td></tr>
+<tr><td>数据包（WidgetData）</td><td>推送给卡片的自治上下文（课程+作息+学期+主题色值），卡片凭其离线推演任意分钟的状态</td></tr>
+<tr><td>三层刷新</td><td>L1 主动（≤5s）/ L2 定点（作息边界，≤24 点/日）/ L3 TextClock 自治（分钟级）</td></tr>
+<tr><td>自治引擎</td><td>卡片内基于 TextClock 回调的本地状态推算机制，零 IPC、零配额</td></tr>
+<tr><td>槽位语义</td><td>课程颜色 index 0-9 跨主题保持色系稳定的规则</td></tr>
+<tr><td>视角状态机</td><td>今日课程卡片"今日→明日→前瞻"的展示状态迁移</td></tr>
+<tr><td>前瞻</td><td>今日无课后逐日扫描未来有课日的逻辑（≤14 天）</td></tr>
+<tr><td>专属日历账户</td><td>应用在系统日历中创建的隔离账户，承载课表日程</td></tr>
+<tr><td>定点刷新时刻表</td><td>form_config 中声明的一组每日刷新时间点，取课程边界并集</td></tr>
+</table>
+
+<div style="margin-top:60px;padding-top:20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--text-3)">
+  <b>文档结束</b> · SchoolCalendar 产品设计文档 V1.0 · 2026-09-20 · 待审核<br>
+  本文档供 AI 实现与人工审核双用途；MD 版本为结构化母版（SchoolCalendar-产品设计文档.md），本 HTML 审核版含卡片视觉 mockup 预览。任何实现偏差应以本文档与 <code>spec/calendar-widget-design/</code> 下规格文档为准。
+</div>
+</section>
+
+<script>
+function setMockTheme(btn, cls) {
+  document.querySelectorAll('.demo-tabs button').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  var stage = document.getElementById('mockAll');
+  stage.classList.remove('mock-theme-fresh','mock-theme-sakura','mock-theme-space');
+  stage.classList.add(cls);
+}
+</script>
+</main>
+</div>
+</body>
+</html>

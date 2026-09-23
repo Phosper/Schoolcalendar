@@ -1,0 +1,1 @@
+{ "src": ["pages/Index", "pages/CourseEdit", "pages/Settings", "pages/SemesterSetting", "pages/ScheduleSetting", "pages/Theme"] }

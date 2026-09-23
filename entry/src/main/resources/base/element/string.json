@@ -1,0 +1,10 @@
+{ "string": [
+  { "name": "module_desc", "value": "把课表放回桌面，把当下放进焦点" },
+  { "name": "next_form", "value": "下一节课" },
+  { "name": "next_form_desc", "value": "下一节课与倒计时" },
+  { "name": "today_form", "value": "今日课程" },
+  { "name": "today_form_desc", "value": "今天和明天的课程" },
+  { "name": "week_form", "value": "完整周课表" },
+  { "name": "week_form_desc", "value": "本周课程总览" },
+  { "name": "calendar_permission", "value": "将课程写入系统日历并提供课前提醒" }
+] }

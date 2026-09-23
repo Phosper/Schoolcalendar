@@ -1,0 +1,28 @@
+{
+  "forms": [
+    {
+      "name": "nextCourse", "displayName": "$string:next_form", "description": "$string:next_form_desc",
+      "src": "./ets/form/pages/NextCard.ets", "uiSyntax": "arkts",
+      "window": { "designWidth": 720, "autoDesignWidth": true },
+      "colorMode": "auto", "isDynamic": false, "isDefault": true,
+      "updateEnabled": true, "scheduledUpdateTime": "00:05",
+      "defaultDimension": "2*2", "supportDimensions": ["1*2", "2*2"]
+    },
+    {
+      "name": "todayCourses", "displayName": "$string:today_form", "description": "$string:today_form_desc",
+      "src": "./ets/form/pages/TodayCard.ets", "uiSyntax": "arkts",
+      "window": { "designWidth": 720, "autoDesignWidth": true },
+      "colorMode": "auto", "isDynamic": false, "isDefault": false,
+      "updateEnabled": true, "scheduledUpdateTime": "00:05",
+      "defaultDimension": "2*4", "supportDimensions": ["2*2", "2*4"]
+    },
+    {
+      "name": "weekCourses", "displayName": "$string:week_form", "description": "$string:week_form_desc",
+      "src": "./ets/form/pages/WeekCard.ets", "uiSyntax": "arkts",
+      "window": { "designWidth": 720, "autoDesignWidth": true },
+      "colorMode": "auto", "isDynamic": false, "isDefault": false,
+      "updateEnabled": true, "scheduledUpdateTime": "00:05",
+      "defaultDimension": "4*4", "supportDimensions": ["2*4", "4*4"]
+    }
+  ]
+}
