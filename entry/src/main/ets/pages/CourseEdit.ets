@@ -1,4 +1,4 @@
-import { promptAction, router } from '@kit.ArkUI';
+import { curves, promptAction, router } from '@kit.ArkUI';
 import { Repository } from '../data/Repository';
 import { AppData, Course, defaultData, SectionTime, ThemeDef } from '../model/Types';
 import { conflict, validWeeksMask } from '../model/Schedule';
@@ -88,17 +88,17 @@ struct CourseEdit {
   }
 
   @Builder private Label(value: string) {
-    Text(value).fontSize(12).fontWeight(FontWeight.Medium).fontColor(this.theme().textSecondary)
+    Text(value).fontSize(14).fontWeight(FontWeight.Medium).fontColor(this.theme().textSecondary)
       .margin({ top: 16, bottom: 9 })
   }
   @Builder private SectionPicker(isStart: boolean) {
     Scroll() {
       Row({ space: 6 }) {
         ForEach(this.data.sections, (s: SectionTime) => {
-          Button(`${s.sectionNo}`, { type: ButtonType.Normal }).fontSize(13).width(38).height(38).borderRadius(11)
+          Button(`${s.sectionNo}`, { type: ButtonType.Normal }).fontSize(14).width(40).height(40).borderRadius(20)
             .fontColor((isStart ? this.start : this.end) === s.sectionNo ? this.theme().cardBg : this.theme().textPrimary)
             .backgroundColor((isStart ? this.start : this.end) === s.sectionNo ? this.theme().accent : this.theme().surface)
-            .animation({ duration: 180, curve: Curve.EaseOut })
+            .animation({ curve: curves.responsiveSpringMotion() })
             .onClick(() => {
               if (isStart) { this.start = s.sectionNo; if (this.end < this.start) this.end = this.start; }
               else { this.end = s.sectionNo; if (this.start > this.end) this.start = this.end; }
@@ -130,31 +130,42 @@ struct CourseEdit {
               theme: this.theme(), changed: (v: string) => { this.teacher = v; } }).margin({ bottom: 14 })
             FormField({ label: '上课地点', value: this.location, hint: '教学楼与教室',
               theme: this.theme(), changed: (v: string) => { this.location = v; } }).margin({ bottom: 14 })
-            Text('课程颜色').fontSize(12).fontColor(this.theme().textSecondary).margin({ bottom: 12 })
-            Row() {
+            Text('课程颜色').fontSize(14).fontColor(this.theme().textSecondary).margin({ bottom: 12 })
+            Grid() {
               ForEach(this.theme().palette, (color: string, index: number) => {
-                Button({ type: ButtonType.Circle }) {
-                  Text(this.colorIndex === index ? '✓' : '').fontSize(13).fontColor(Color.White)
-                }.width(26).height(26).backgroundColor(color)
-                  .scale({ x: this.colorIndex === index ? 1.10 : 0.88, y: this.colorIndex === index ? 1.10 : 0.88 })
-                  .animation({ duration: 180, curve: Curve.EaseOut }).onClick(() => { this.colorIndex = index; })
-                  .accessibilityText(`课程颜色 ${index + 1}${this.colorIndex === index ? '，已选中' : ''}`)
+                GridItem() {
+                  Button({ type: ButtonType.Normal }) {
+                    Stack() {
+                      Circle().width(28).height(28).fill(color)
+                      if (this.colorIndex === index) {
+                        SymbolGlyph($r('sys.symbol.checkmark')).fontSize(16).fontColor([Color.White])
+                      }
+                    }.width(40).height(40)
+                      .border({ width: this.colorIndex === index ? 2 : 0, color: color }).borderRadius(20)
+                      .scale({ x: this.colorIndex === index ? 1 : 0.9, y: this.colorIndex === index ? 1 : 0.9 })
+                      .animation({ curve: curves.responsiveSpringMotion() })
+                  }.width(48).height(48).backgroundColor(Color.Transparent).borderRadius(24)
+                    .onClick(() => { this.colorIndex = index; })
+                    .accessibilityText(`课程颜色 ${index + 1}${this.colorIndex === index ? '，已选中' : ''}`)
+                }
               }, (color: string, index: number) => `${index}`)
-            }.width('100%').justifyContent(FlexAlign.SpaceBetween)
+            }.columnsTemplate('1fr 1fr 1fr 1fr 1fr').rowsTemplate('1fr 1fr').rowsGap(8).height(104).width('100%')
           }.alignItems(HorizontalAlign.Start).padding(18).width('100%')
             .backgroundColor(this.theme().cardBg).borderRadius(20).border({ width: 1, color: this.theme().line }).borderRadius(20)
           Column() {
             Text('上课安排').fontSize(16).fontWeight(FontWeight.Medium).fontColor(this.theme().textPrimary)
             this.Label('星期')
-            Row({ space: 4 }) {
-              ForEach(DAYS, (label: string, index: number) => {
-                Button(label.replace('周', ''), { type: ButtonType.Normal }).fontSize(12).height(38).layoutWeight(1)
-                  .fontColor(this.day === index + 1 ? this.theme().cardBg : this.theme().textPrimary)
-                  .backgroundColor(this.day === index + 1 ? this.theme().accent : this.theme().surface)
-                  .borderRadius(11).animation({ duration: 180, curve: Curve.EaseOut }).onClick(() => { this.day = index + 1; })
-                  .accessibilityText(label)
-              }, (label: string) => label)
-            }.width('100%')
+            Scroll() {
+              Row({ space: 3 }) {
+                ForEach(DAYS, (label: string, index: number) => {
+                  Button(label.replace('周', ''), { type: ButtonType.Normal }).fontSize(14).width(40).height(40)
+                    .fontColor(this.day === index + 1 ? this.theme().cardBg : this.theme().textPrimary)
+                    .backgroundColor(this.day === index + 1 ? this.theme().accent : this.theme().surface)
+                    .borderRadius(20).animation({ curve: curves.responsiveSpringMotion() }).onClick(() => { this.day = index + 1; })
+                    .accessibilityText(label)
+                }, (label: string) => label)
+              }
+            }.scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off).width('100%')
             this.Label('开始节次')
             this.SectionPicker(true)
             this.Label('结束节次')
@@ -162,10 +173,11 @@ struct CourseEdit {
             this.Label('上课周次')
             Row({ space: 6 }) {
               ForEach(['all', 'odd', 'even', 'custom'], (value: string, index: number) => {
-                Button(['每周', '单周', '双周', '自定义'][index], { type: ButtonType.Normal }).fontSize(12).height(38).layoutWeight(1)
+                Button(['每周', '单周', '双周', '自定义'][index], { type: ButtonType.Normal }).fontSize(14).height(40).layoutWeight(1)
+                  .padding({ left: 8, right: 8 })
                   .fontColor(this.pattern === value ? this.theme().cardBg : this.theme().textPrimary)
                   .backgroundColor(this.pattern === value ? this.theme().accent : this.theme().surface)
-                  .borderRadius(11).animation({ duration: 180, curve: Curve.EaseOut }).onClick(() => { this.pattern = value; })
+                  .borderRadius(20).animation({ curve: curves.responsiveSpringMotion() }).onClick(() => { this.pattern = value; })
               }, (value: string) => value)
             }.width('100%')
             if (this.pattern === 'custom') {
@@ -173,7 +185,7 @@ struct CourseEdit {
                 .fontColor(this.theme().textPrimary).placeholderColor(this.theme().textSecondary)
                 .backgroundColor(this.theme().surface).borderRadius(12).margin({ top: 12 })
                 .onChange((v: string) => { this.weeks = v; })
-              Button('快速选择第 1-8 周', { type: ButtonType.Normal }).fontSize(11).height(36)
+              Button('快速选择第 1-8 周', { type: ButtonType.Normal }).fontSize(14).height(40)
                 .backgroundColor(Color.Transparent).fontColor(this.theme().accent)
                 .onClick(() => { this.weeks = '1-8'; })
             }
@@ -184,7 +196,7 @@ struct CourseEdit {
               .backgroundColor(this.theme().cardBg).fontColor(this.dark || this.data.themeId === 'deep_space' ? '#FFA6AF' : '#AD4E61')
               .onClick(() => this.remove())
           }
-          Text('保存后会更新课表与桌面卡片').fontSize(11).fontColor(this.theme().textSecondary)
+          Text('保存后会更新课表与桌面卡片').fontSize(12).fontColor(this.theme().textSecondary)
             .width('100%').textAlign(TextAlign.Center).margin({ bottom: 10 })
         }.alignItems(HorizontalAlign.Start).width('100%')
       }.layoutWeight(1).scrollBar(BarState.Off).width('100%')

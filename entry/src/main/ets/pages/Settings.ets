@@ -67,21 +67,21 @@ struct Settings {
   @Builder private SettingRow(icon: string, title: string, path: string) {
     Button({ type: ButtonType.Normal }) {
       Row({ space: 13 }) {
-        Column() { AppIcon({ name: icon }) }.width(42).height(42)
+        Column() { AppIcon({ name: icon, iconSize: 24, tint: this.theme().accent }) }.width(42).height(42)
           .justifyContent(FlexAlign.Center).backgroundColor(this.theme().surface).borderRadius(13)
         Column({ space: 5 }) {
-          Text(title).fontSize(15).fontWeight(FontWeight.Medium).fontColor(this.theme().textPrimary)
+          Text(title).fontSize(16).fontWeight(FontWeight.Medium).fontColor(this.theme().textPrimary)
           Text(path === 'pages/SemesterSetting' ? `${this.data.semester.name} · ${this.data.semester.totalWeeks} 周` :
             path === 'pages/ScheduleSetting' ? `每日 ${this.data.sections.length} 节 · 自定义上课时间` : `${this.theme().name} · 10 种配色`)
-            .fontSize(11).fontColor(this.theme().textSecondary).maxLines(2)
+            .fontSize(14).fontColor(this.theme().textSecondary).maxLines(2)
         }.alignItems(HorizontalAlign.Start).layoutWeight(1)
-        AppIcon({ name: 'next', iconSize: 16 })
+        AppIcon({ name: 'next', iconSize: 16, tint: this.theme().textSecondary })
       }.width('100%').padding(16)
     }.width('100%').backgroundColor(this.theme().cardBg).borderRadius(18)
       .border({ width: 1, color: this.theme().line }).borderRadius(18).onClick(() => router.pushUrl({ url: path }))
   }
   @Builder private GroupLabel(title: string) {
-    Text(title).fontSize(11).fontWeight(FontWeight.Medium).fontColor(this.theme().textSecondary)
+    Text(title).fontSize(14).fontWeight(FontWeight.Medium).fontColor(this.theme().textSecondary)
       .width('100%').margin({ top: 10, bottom: 2, left: 4 })
   }
   build() {
@@ -92,7 +92,7 @@ struct Settings {
           Column({ space: 8 }) {
             Text('安排有序，生活从容。').fontSize(21).fontWeight(FontWeight.Bold).fontColor(this.theme().textPrimary)
             Text(`${this.data.semester.name} · ${this.data.courses.length} 门课程`)
-              .fontSize(12).fontColor(this.theme().textSecondary)
+              .fontSize(14).fontColor(this.theme().textSecondary)
           }.width('100%').alignItems(HorizontalAlign.Start).padding(20)
             .backgroundColor(this.theme().accentSoft).borderRadius(22)
           this.GroupLabel('学习安排')
@@ -102,27 +102,27 @@ struct Settings {
           this.SettingRow('palette', '主题外观', 'pages/Theme')
           Button({ type: ButtonType.Normal }) {
             Row({ space: 13 }) {
-              Column() { AppIcon({ name: 'widget' }) }.width(42).height(42)
+              Column() { AppIcon({ name: 'widget', iconSize: 24, tint: this.theme().accent }) }.width(42).height(42)
                 .justifyContent(FlexAlign.Center).backgroundColor(this.theme().surface).borderRadius(13)
               Column({ space: 5 }) {
-                Text('桌面卡片').fontSize(15).fontWeight(FontWeight.Medium).fontColor(this.theme().textPrimary)
-                Text('把下一节课、今日课程放在桌面').fontSize(11).fontColor(this.theme().textSecondary)
+                Text('桌面卡片').fontSize(16).fontWeight(FontWeight.Medium).fontColor(this.theme().textPrimary)
+                Text('把下一节课、今日课程放在桌面').fontSize(14).fontColor(this.theme().textSecondary)
               }.alignItems(HorizontalAlign.Start).layoutWeight(1)
-              AppIcon({ name: 'next', iconSize: 16 })
+              AppIcon({ name: 'next', iconSize: 16, tint: this.theme().textSecondary })
             }.padding(16).width('100%')
           }.width('100%').backgroundColor(this.theme().cardBg).borderRadius(18)
             .border({ width: 1, color: this.theme().line }).borderRadius(18)
             .onClick(() => formProvider.openFormManager({ bundleName: 'com.schoolcalendar.app', moduleName: 'entry', abilityName: 'SchoolFormAbility' }))
           this.GroupLabel('提醒与同步')
           Row({ space: 13 }) {
-            Column() { AppIcon({ name: 'sync' }) }.width(42).height(42)
+            Column() { AppIcon({ name: 'sync', iconSize: 24, tint: this.theme().accent }) }.width(42).height(42)
               .justifyContent(FlexAlign.Center).backgroundColor(this.theme().surface).borderRadius(13)
             Column({ space: 5 }) {
-              Text('同步到系统日历').fontSize(15).fontWeight(FontWeight.Medium).fontColor(this.theme().textPrimary)
-              Text(this.syncing ? '正在同步课程…' : '由系统日历发送课前提醒').fontSize(11).fontColor(this.theme().textSecondary)
+              Text('同步到系统日历').fontSize(16).fontWeight(FontWeight.Medium).fontColor(this.theme().textPrimary)
+              Text(this.syncing ? '正在同步课程…' : '由系统日历发送课前提醒').fontSize(14).fontColor(this.theme().textSecondary)
             }.alignItems(HorizontalAlign.Start).layoutWeight(1)
             Toggle({ type: ToggleType.Switch, isOn: this.data.calendarSyncEnabled })
-              .selectedColor(this.theme().accent).enabled(!this.syncing)
+              .width(56).height(40).selectedColor(this.theme().accent).enabled(!this.syncing)
               .onChange((value: boolean) => this.switchSync(value))
           }.padding(16).width('100%').backgroundColor(this.theme().cardBg).borderRadius(18)
             .border({ width: 1, color: this.theme().line }).borderRadius(18)
@@ -131,7 +131,7 @@ struct Settings {
               Text('提前多久提醒？').fontSize(14).fontWeight(FontWeight.Medium).fontColor(this.theme().textPrimary).width('100%')
               Row({ space: 8 }) {
                 ForEach([5, 10, 15, 30], (value: number) => {
-                  Button(`${value} 分`, { type: ButtonType.Normal }).fontSize(12).height(38).layoutWeight(1)
+                  Button(`${value} 分`, { type: ButtonType.Normal }).fontSize(14).height(40).layoutWeight(1)
                     .fontColor(this.data.reminderMinutes === value ? this.theme().cardBg : this.theme().textPrimary)
                     .backgroundColor(this.data.reminderMinutes === value ? this.theme().accent : this.theme().surface)
                     .borderRadius(11).animation({ duration: 180, curve: Curve.EaseOut })
@@ -142,7 +142,7 @@ struct Settings {
             }.padding(16).width('100%').backgroundColor(this.theme().cardBg).borderRadius(18)
               .transition(TransitionEffect.OPACITY.combine(TransitionEffect.translate({ y: 8 })).animation({ duration: 200 }))
           }
-          Text('SchoolCalendar · 课程数据保存在本机').fontSize(11).fontColor(this.theme().textSecondary)
+          Text('SchoolCalendar · 课程数据保存在本机').fontSize(14).fontColor(this.theme().textSecondary)
             .width('100%').textAlign(TextAlign.Center).margin({ top: 18, bottom: 20 })
         }.width('100%').alignItems(HorizontalAlign.Start)
       }.layoutWeight(1).scrollBar(BarState.Off).width('100%')

@@ -1,4 +1,4 @@
-import { router } from '@kit.ArkUI';
+import { curves, router } from '@kit.ArkUI';
 import { Repository } from '../data/Repository';
 import { AppData, Course, defaultData, SectionTime, ThemeDef } from '../model/Types';
 import { addDays, coursesOn, minutes, nextCourse, parseDate, sectionFor, semesterMessage, teachingWeek } from '../model/Schedule';
@@ -19,6 +19,7 @@ struct Index {
   @State ready: boolean = false;
   @State gridOpacity: number = 1;
   @State weekTranslation: number = 0;
+  @State gridWidth: number = 384;
   @StorageProp('isDark') dark: boolean = false;
   @State showDetail: boolean = false;
   @State selectedCourse: Course = { id: 0, name: '', teacher: '', location: '', dayOfWeek: 1,
@@ -77,7 +78,7 @@ struct Index {
     this.weekTranslation = target > this.shownWeek ? 12 : -12;
     this.gridOpacity = 0.45;
     this.shownWeek = target;
-    this.getUIContext().animateTo({ duration: 240, curve: Curve.EaseOut }, () => {
+    this.getUIContext().animateTo({ curve: curves.springMotion(0.35, 0.9) }, () => {
       this.weekTranslation = 0; this.gridOpacity = 1;
     });
   }
@@ -112,8 +113,8 @@ struct Index {
         Text('课程详情').fontSize(12).fontColor(this.theme().textSecondary)
         Blank()
         Button({ type: ButtonType.Normal }) {
-          AppIcon({ name: 'close', iconSize: 16 })
-        }.width(30).height(30).backgroundColor(this.theme().surface).borderRadius(10)
+          AppIcon({ name: 'close', iconSize: 20, tint: this.theme().textPrimary })
+        }.width(40).height(40).backgroundColor(this.theme().surface).borderRadius(20)
           .onClick(() => { this.showDetail = false; }).accessibilityText('关闭课程详情')
       }.width('100%')
       Text(this.selectedCourse.name).fontSize(26).fontWeight(FontWeight.Bold)
@@ -121,10 +122,10 @@ struct Index {
       Text(`${this.selectedCourse.location || '地点未填写'} · ${this.selectedCourse.teacher || '教师未填写'}`)
         .fontSize(14).fontColor(this.theme().textSecondary).width('100%')
       Row({ space: 12 }) {
-        AppIcon({ name: 'clock' })
+        AppIcon({ name: 'clock', tint: this.theme().accent })
         Column({ space: 5 }) {
           Text(`周${DAYS[this.selectedCourse.dayOfWeek - 1]} · 第 ${this.selectedCourse.startSection}-${this.selectedCourse.endSection} 节`)
-            .fontSize(15).fontColor(this.theme().textPrimary)
+            .fontSize(16).fontColor(this.theme().textPrimary)
           Text(`${sectionFor(this.data, this.selectedCourse.startSection).startTime} — ${sectionFor(this.data, this.selectedCourse.endSection).endTime}`)
             .fontSize(13).fontColor(this.theme().textSecondary)
         }.alignItems(HorizontalAlign.Start)
@@ -133,7 +134,7 @@ struct Index {
         Text(`上课周次 · ${this.selectedCourse.weekPattern === 'all' ? '每周' : this.selectedCourse.weekPattern === 'odd' ? '单周' : this.selectedCourse.weekPattern === 'even' ? '双周' : this.selectedCourse.weeksMask}`)
           .fontSize(13).fontColor(this.theme().textSecondary).layoutWeight(1).maxLines(2)
         Text(coursesOn(this.data, this.dayDate(this.selectedCourse.dayOfWeek)).some((c: Course) => c.id === this.selectedCourse.id) ? '本周有课' : '本周无课')
-          .fontSize(11).fontColor(this.theme().accent).padding(7).backgroundColor(this.theme().accentSoft).borderRadius(8)
+          .fontSize(12).fontColor(this.theme().accent).padding(7).backgroundColor(this.theme().accentSoft).borderRadius(8)
       }.width('100%')
       Row({ space: 12 }) {
         Button('编辑课程', { type: ButtonType.Normal }).layoutWeight(2).height(48).borderRadius(14)
@@ -149,10 +150,10 @@ struct Index {
   @Builder private Upcoming() {
     Column({ space: 12 }) {
       Row({ space: 8 }) {
-        AppIcon({ name: 'calendar', iconSize: 16 })
+        AppIcon({ name: 'calendar', iconSize: 20, tint: this.theme().accent })
         Text('学习日程').fontSize(12).fontColor(this.theme().textSecondary)
         Blank()
-        Text(this.upcomingStatus()).fontSize(11).fontWeight(FontWeight.Medium)
+        Text(this.upcomingStatus()).fontSize(12).fontWeight(FontWeight.Medium)
           .fontColor(this.theme().accent).padding({ left: 10, right: 10, top: 5, bottom: 5 })
           .backgroundColor(this.theme().cardBg).borderRadius(8)
       }.width('100%')
@@ -163,10 +164,10 @@ struct Index {
         Text(nextCourse(this.data, new Date(this.now))!.course.name).fontSize(25).fontWeight(FontWeight.Bold)
           .fontColor(this.theme().textPrimary).maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
         Row({ space: 6 }) {
-          AppIcon({ name: 'clock', iconSize: 14 })
+          AppIcon({ name: 'clock', iconSize: 16, tint: this.theme().textSecondary })
           Text(`${sectionFor(this.data, nextCourse(this.data, new Date(this.now))!.course.startSection).startTime} · ${nextCourse(this.data, new Date(this.now))!.date.getMonth() + 1}/${nextCourse(this.data, new Date(this.now))!.date.getDate()}`)
             .fontSize(12).fontColor(this.theme().textSecondary)
-          AppIcon({ name: 'location', iconSize: 14 }).margin({ left: 6 })
+          AppIcon({ name: 'location', iconSize: 16, tint: this.theme().textSecondary }).margin({ left: 6 })
           Text(nextCourse(this.data, new Date(this.now))!.course.location || '地点待补充')
             .fontSize(12).fontColor(this.theme().textSecondary).maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis }).layoutWeight(1)
@@ -189,7 +190,7 @@ struct Index {
   @Builder private DayColumn(day: number) {
     Column() {
       Column({ space: 5 }) {
-        Text(`周${DAYS[day - 1]}`).fontSize(10).fontColor(this.isToday(day) ? this.theme().accent : this.theme().textSecondary)
+        Text(`周${DAYS[day - 1]}`).fontSize(12).fontColor(this.isToday(day) ? this.theme().accent : this.theme().textSecondary)
         Text(`${this.dayDate(day).getDate()}`).fontSize(16).fontWeight(FontWeight.Bold)
           .fontColor(this.isToday(day) ? this.theme().cardBg : this.theme().textPrimary)
           .width(28).height(28).textAlign(TextAlign.Center).borderRadius(10)
@@ -199,11 +200,11 @@ struct Index {
         if (this.atStart(day, s.sectionNo)) {
           Button({ type: ButtonType.Normal }) {
             Column({ space: 5 }) {
-              Text(this.atStart(day, s.sectionNo)!.name).fontSize(this.expanded ? 12 : 10).fontWeight(FontWeight.Medium)
+              Text(this.atStart(day, s.sectionNo)!.name).fontSize(this.expanded ? 14 : 12).fontWeight(FontWeight.Medium)
                 .maxLines(this.expanded ? 2 : 4).textOverflow({ overflow: TextOverflow.Ellipsis })
                 .fontColor(courseForeground(this.theme(), this.atStart(day, s.sectionNo)!.colorIndex, this.dark))
               if (this.atStart(day, s.sectionNo)!.location) {
-                Text(this.atStart(day, s.sectionNo)!.location).fontSize(9).maxLines(2)
+                Text(this.atStart(day, s.sectionNo)!.location).fontSize(12).maxLines(2)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                   .fontColor(courseForeground(this.theme(), this.atStart(day, s.sectionNo)!.colorIndex, this.dark))
               }
@@ -226,7 +227,7 @@ struct Index {
 
   @Builder private EmptyState() {
     Column({ space: 14 }) {
-      AppIcon({ name: 'book', iconSize: 36 })
+      AppIcon({ name: 'book', iconSize: 36, tint: this.theme().accent })
       Text('你的课表，等你来填').fontSize(19).fontWeight(FontWeight.Medium).fontColor(this.theme().textPrimary)
       Text('先设置学期，再添加第一门课程\n每周的安排会自动出现在这里')
         .fontSize(13).lineHeight(22).textAlign(TextAlign.Center).fontColor(this.theme().textSecondary)
@@ -240,25 +241,24 @@ struct Index {
   build() {
     Column({ space: 16 }) {
       Row() {
-        Column({ space: 5 }) {
-          Text('SCHOOL / CALENDAR').fontSize(10).letterSpacing(2).fontWeight(FontWeight.Medium).fontColor(this.theme().accent)
-          Text('我的课表').fontSize(29).fontWeight(FontWeight.Bold).fontColor(this.theme().textPrimary)
-          Text(this.data.semester.name).fontSize(12).fontColor(this.theme().textSecondary)
+        Column({ space: 4 }) {
+          Text('我的课表').fontSize(26).fontWeight(FontWeight.Bold).fontColor(this.theme().textPrimary)
+          Text(this.data.semester.name).fontSize(14).fontColor(this.theme().textSecondary)
         }.alignItems(HorizontalAlign.Start).layoutWeight(1)
         IconAction({ icon: 'settings', label: '打开设置', theme: this.theme(),
           action: () => router.pushUrl({ url: 'pages/Settings' }) })
-      }.width('100%').padding({ top: 6 })
+      }.width('100%').height(56)
       this.Upcoming()
       Row({ space: 8 }) {
         Column({ space: 4 }) {
           Text(`第 ${this.shownWeek} 周`).fontSize(20).fontWeight(FontWeight.Bold).fontColor(this.theme().textPrimary)
-          Text(this.weekRange()).fontSize(11).fontColor(this.theme().textSecondary)
+          Text(this.weekRange()).fontSize(12).fontColor(this.theme().textSecondary)
         }.alignItems(HorizontalAlign.Start).layoutWeight(1)
         IconAction({ icon: 'back', label: '上一周', theme: this.theme(), active: this.shownWeek > 1,
           action: () => this.changeWeek(this.shownWeek - 1) })
         IconAction({ icon: 'next', label: '下一周', theme: this.theme(), active: this.shownWeek < this.data.semester.totalWeeks,
           action: () => this.changeWeek(this.shownWeek + 1) })
-        Button('今天', { type: ButtonType.Normal }).height(42).fontSize(12).borderRadius(14)
+        Button('今天', { type: ButtonType.Normal }).height(48).fontSize(14).borderRadius(24)
           .fontColor(this.theme().accent).backgroundColor(this.theme().accentSoft)
           .onClick(() => this.changeWeek(teachingWeek(this.data, new Date(this.now))))
       }.width('100%')
@@ -267,42 +267,48 @@ struct Index {
       } else {
         Column({ space: 10 }) {
           Row() {
-            Text(`本周 ${this.weekCount()} 次课`).fontSize(11).fontColor(this.theme().textSecondary)
+            Column({ space: 3 }) {
+              Text(`本周 ${this.weekCount()} 次课`).fontSize(12).fontColor(this.theme().textSecondary)
+              if (this.expanded || this.gridWidth < 384) {
+                Text('左右滑动').fontSize(12).fontColor(this.theme().textSecondary)
+              }
+            }.alignItems(HorizontalAlign.Start)
             Blank()
             Row({ space: 2 }) {
               ForEach(['全周', '展开'], (label: string, index: number) => {
-                Button(label, { type: ButtonType.Normal }).fontSize(10).height(28).borderRadius(8)
+                Button(label, { type: ButtonType.Normal }).fontSize(14).height(40).borderRadius(20)
                   .backgroundColor(this.expanded === (index === 1) ? this.theme().cardBg : Color.Transparent)
                   .fontColor(this.expanded === (index === 1) ? this.theme().textPrimary : this.theme().textSecondary)
                   .onClick(() => { this.getUIContext().animateTo({ duration: 220, curve: Curve.EaseOut }, () => { this.expanded = index === 1; }); })
               }, (label: string) => label)
-            }.padding(3).backgroundColor(this.theme().surface).borderRadius(10)
+            }.padding(3).backgroundColor(this.theme().surface).borderRadius(23)
           }.width('100%')
           Scroll() {
             Scroll() {
               Row() {
                 Column() {
-                  Text('节次').height(64).fontSize(9).fontColor(this.theme().textSecondary)
+                  Text('节次').height(64).fontSize(12).fontColor(this.theme().textSecondary)
                   ForEach(this.data.sections, (s: SectionTime) => {
                     Column({ space: 4 }) {
                       Text(`${s.sectionNo}`).fontSize(12).fontWeight(FontWeight.Medium)
                         .fontColor(this.isCurrentSection(s.sectionNo) ? this.theme().accent : this.theme().textSecondary)
-                      Text(sectionFor(this.data, s.sectionNo).startTime).fontSize(8).fontColor(this.theme().textSecondary)
-                    }.width(30).height(64).justifyContent(FlexAlign.Center)
+                      Text(sectionFor(this.data, s.sectionNo).startTime).fontSize(12).fontColor(this.theme().textSecondary)
+                    }.width(48).height(64).justifyContent(FlexAlign.Center)
                       .backgroundColor(this.isCurrentSection(s.sectionNo) ? this.theme().accentSoft : Color.Transparent).borderRadius(8)
                   }, (s: SectionTime) => `${s.sectionNo}`)
-                }.width(30)
+                }.width(48)
                 ForEach([1, 2, 3, 4, 5, 6, 7], (d: number) => { this.DayColumn(d) }, (d: number) => `${d}`)
-              }.alignItems(VerticalAlign.Top).width(this.expanded ? 650 : '100%')
+              }.alignItems(VerticalAlign.Top).width(this.expanded ? Math.max(650, this.gridWidth) : Math.max(384, this.gridWidth))
             }.scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off).width('100%')
+              .onAreaChange((oldArea: Area, newArea: Area) => { this.gridWidth = Number(newArea.width); })
           }.scrollable(ScrollDirection.Vertical).scrollBar(BarState.Off).width('100%').layoutWeight(1)
             .opacity(this.gridOpacity).translate({ x: this.weekTranslation })
         }.padding(10).width('100%').layoutWeight(1).backgroundColor(this.theme().cardBg)
           .border({ width: 1, color: this.theme().line }).borderRadius(22).clip(true)
       }
-      PrimaryAction({ label: '＋  添加课程', theme: this.theme(), action: () => router.pushUrl({ url: 'pages/CourseEdit' }) })
+      PrimaryAction({ label: '添加课程', theme: this.theme(), action: () => router.pushUrl({ url: 'pages/CourseEdit' }) })
     }.padding({ left: 20, right: 20, top: 12, bottom: 16 }).width('100%').height('100%')
       .backgroundColor(this.theme().bg).opacity(this.ready ? 1 : 0).translate({ y: this.ready ? 0 : 12 })
-      .bindSheet(this.showDetail, this.CourseSheet(), { height: 410, showClose: false, backgroundColor: this.theme().cardBg })
+      .bindSheet(this.showDetail, this.CourseSheet(), { height: SheetSize.FIT_CONTENT, showClose: false, backgroundColor: this.theme().cardBg })
   }
 }

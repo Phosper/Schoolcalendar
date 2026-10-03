@@ -63,12 +63,12 @@ struct Theme {
     Column({ space: 14 }) {
       PageHeader({ title: '主题外观', caption: '给每一天，换一种心情', theme: this.current() })
       Column({ space: 8 }) {
-        Text('预览你的下一节课').fontSize(11).fontColor(this.current().textSecondary).width('100%')
+        Text('预览你的下一节课').fontSize(12).fontColor(this.current().textSecondary).width('100%')
         Text('设计你的校园日常').fontSize(22).fontWeight(FontWeight.Bold).fontColor(this.current().textPrimary).width('100%')
         Row({ space: 8 }) {
           Text('08:00 — 09:40').fontSize(12).fontColor(this.current().accent)
           Blank()
-          Text(this.current().name).fontSize(11).fontColor(this.current().textSecondary)
+          Text(this.current().name).fontSize(12).fontColor(this.current().textSecondary)
         }.width('100%')
       }.padding(20).backgroundColor(this.current().accentSoft).borderRadius(22).width('100%')
       Grid() {
@@ -76,7 +76,7 @@ struct Theme {
           GridItem() { this.ThemeTile(t) }
         }, (t: ThemeDef) => t.id)
       }.columnsTemplate('1fr 1fr').columnsGap(12).rowsGap(12).layoutWeight(1).width('100%').scrollBar(BarState.Off)
-      Text('外观自动适配系统深色模式').fontSize(11).fontColor(this.current().textSecondary)
+      Text('外观自动适配系统深色模式').fontSize(12).fontColor(this.current().textSecondary)
     }.padding({ left: 20, right: 20, top: 12, bottom: 16 }).width('100%').height('100%').backgroundColor(this.current().bg)
   }
   pageTransition() {

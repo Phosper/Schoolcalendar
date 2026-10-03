@@ -57,7 +57,7 @@ struct ScheduleSetting {
       Row({ space: 10 }) {
         Column({ space: 5 }) {
           Text(`每日 ${this.sections.length} 节`).fontSize(21).fontWeight(FontWeight.Bold).fontColor(this.theme().textPrimary)
-          Text('时间格式为 HH:mm').fontSize(11).fontColor(this.theme().textSecondary)
+          Text('时间格式为 HH:mm').fontSize(12).fontColor(this.theme().textSecondary)
         }.alignItems(HorizontalAlign.Start).layoutWeight(1)
         Button('−', { type: ButtonType.Normal }).width(40).height(40).borderRadius(12)
           .backgroundColor(this.theme().cardBg).fontColor(this.theme().accent).enabled(this.sections.length > 1)
@@ -67,9 +67,9 @@ struct ScheduleSetting {
           .onClick(() => this.addSection()).accessibilityText('增加一节课')
       }.width('100%').padding(18).backgroundColor(this.theme().accentSoft).borderRadius(20)
       Row() {
-        Text('节次').width(44).fontSize(11).fontColor(this.theme().textSecondary)
-        Text('开始时间').layoutWeight(1).fontSize(11).fontColor(this.theme().textSecondary)
-        Text('结束时间').layoutWeight(1).fontSize(11).fontColor(this.theme().textSecondary)
+        Text('节次').width(44).fontSize(12).fontColor(this.theme().textSecondary)
+        Text('开始时间').layoutWeight(1).fontSize(12).fontColor(this.theme().textSecondary)
+        Text('结束时间').layoutWeight(1).fontSize(12).fontColor(this.theme().textSecondary)
       }.width('100%').padding({ left: 16, right: 16 })
       Scroll() {
         Column({ space: 8 }) {
@@ -90,7 +90,7 @@ struct ScheduleSetting {
           }, (s: SectionTime) => `${s.sectionNo}`)
         }.width('100%')
       }.layoutWeight(1).width('100%').scrollBar(BarState.Off)
-      Button('恢复默认作息', { type: ButtonType.Normal }).height(38).fontSize(12)
+      Button('恢复默认作息', { type: ButtonType.Normal }).height(40).fontSize(12)
         .backgroundColor(Color.Transparent).fontColor(this.theme().textSecondary).onClick(() => {
           if (this.data.courses.some((c) => c.endSection > 12)) {
             promptAction.showToast({ message: '第 13 节以后已有课程，无法恢复默认' }); return;

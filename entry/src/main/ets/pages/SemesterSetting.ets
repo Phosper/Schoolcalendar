@@ -38,7 +38,7 @@ struct SemesterSetting {
       Scroll() {
         Column({ space: 16 }) {
           Row({ space: 14 }) {
-            AppIcon({ name: 'calendar', iconSize: 30 })
+            AppIcon({ name: 'calendar', iconSize: 30, tint: this.theme().accent })
             Column({ space: 6 }) {
               Text('新学期，新的节奏').fontSize(21).fontWeight(FontWeight.Bold).fontColor(this.theme().textPrimary)
               Text('学期日期决定每门课的教学周次').fontSize(12).fontColor(this.theme().textSecondary)
