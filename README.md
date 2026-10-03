@@ -8,7 +8,7 @@
 - 课程添加、编辑、删除、冲突提示；全周、单双周、自定义周次；周视图、课程详情半模态、学期与作息设置。
 - 10 套主题、跟随系统深色模式。
 - 六个页面统一使用柔和配色、HarmonyOS Symbol 系统图标、圆角卡片与清晰的文字层级；课程使用浅色底与彩色边线。
-- 全周视图保持完整的七天结构，窄屏可横向浏览，可切换展开视图阅读更宽的课程卡片；节次区域支持纵向滚动。今日日期、当前节次与下一节课状态自动突出显示。
+- 全周视图按可用宽度完整显示七天；展开视图使用较宽的课程卡片并支持横向浏览，切回全周时恢复到左侧。节次区域支持纵向滚动。今日日期、当前节次与下一节课状态自动突出显示。
 - 页面进入与主题切换使用短过渡；切周、按钮按压和课程选项使用 ArkUI 原生弹簧曲线；课程详情使用内容自适应的原生半模态。
 - 下一节课、今日课程、完整周课表三类桌面卡片，各支持两种尺寸；TextClock 分钟级状态重算，数据变更时主动推送，跨天定点刷新。
 - 可选系统日历同步：申请日历权限、使用独立日历账户、按有效教学周展开日程、提供 5/10/15/30 分钟课前提醒、关闭时移除专属日历。
@@ -35,7 +35,7 @@
 
 - [标题栏](https://developer.huawei.com/consumer/cn/doc/design-guides/titlebar-0000001929628982)：首页以课表图形内容为主，采用 56 vp 普通双行标题区；二级页采用 56 vp 标题栏，说明文字放在栏下，返回入口保持一致。
 - [HarmonyOS Symbol](https://developer.huawei.com/consumer/cn/doc/design-guides/system-icons-0000001929854962)：通过 `SymbolGlyph` 使用系统图标，颜色随主题变化，装饰图标不单独进入无障碍焦点。
-- [应用 UX 体验检查](https://developer.huawei.com/consumer/cn/doc/guidebook/solution7-0000002601693441)：按点击热区至少 40 × 40 vp 的要求调整颜色、星期、节次、视图切换与关闭按钮；颜色选择采用两行布局，课表课程列宽至少 44 vp。
+- [应用 UX 体验检查](https://developer.huawei.com/consumer/cn/doc/guidebook/solution7-0000002601693441)：按点击热区至少 40 × 40 vp 的要求调整颜色、星期、节次、视图切换与关闭按钮；颜色选择采用两行布局。全周课程列随屏幕宽度分配，窄屏和大字号下可切换展开视图阅读课程名和地点。
 - [鸿蒙黑体](https://developer.huawei.com/consumer/cn/doc/design-guides/font-0000001828772001)：保留系统字体，以字重和字号区分信息层级。项目自定辅助文字下限为 12 fp，输入及主要操作为 16 fp；这里的 12 fp 是本项目的设计选择。
 - [动效属性](https://developer.huawei.com/consumer/cn/doc/design-guides/animation-attributes-0000001797117229)与[插值计算](https://developer.huawei.com/consumer/cn/doc/harmonyos-references/js-apis-curve)：按压使用 `responsiveSpringMotion()`，切周采用 `springMotion(0.35, 0.9)`。弹簧动画时长由物理参数决定，普通渐变仍使用短时长曲线。
 
@@ -48,5 +48,7 @@
 2026-10-03 的界面改版已完成编译和模拟器安装，检查了切周、返回今天、全周/展开视图、课表纵向滚动、课程详情、编辑表单与主题切换。10 套主题的浅色/深色组合中，课程文字、卡片辅助文字与主按钮文字的颜色对比度检查通过 4.5:1。新版截图：[首页](docs/ui-home.png)、[展开课表](docs/ui-expanded.png)、[深色主题](docs/ui-dark.png)、[设置](docs/ui-settings.png)、[主题选择](docs/ui-theme.png)、[课程编辑](docs/ui-course-edit.png)。模拟器输入法的首次使用协议尚未配置，本次没有新增保存课程或复测输入法操作；课程保存逻辑保持原有实现。
 
 同日按官方资料进一步调整标题栏、系统图标、文字大小、点击区域与弹簧动效，API 23 编译、课程逻辑测试及主题对比度检查通过。模拟器检查了切周、返回今天、展开视图、课表双向滚动、课程详情、颜色草稿选择及已有课程和学期值加载；未保存测试草稿，恢复了测试前的主题。当前截图：[首页](docs/harmony-home.png)、[展开课表](docs/harmony-expanded.png)、[深色](docs/harmony-dark.png)、[设置](docs/harmony-settings.png)、[课程编辑](docs/harmony-course-edit.png)、[课程选项](docs/harmony-course-options.png)、[课程详情](docs/harmony-detail.png)。
+
+另修复全周视图右侧裁切：七列按可用宽度分配，仅展开视图支持横向滚动，切回全周时归零横向偏移。已在 API 23 模拟器验证七个星期标题全部位于可见区域，并检查展开浏览后切回全周。
 
 桌面卡片入口在该模拟器中会跳转桌面，但未能在模拟器里完成卡片摆放和分钟刷新验证；实际提醒通知的送达也需在目标设备上验收。

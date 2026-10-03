@@ -19,12 +19,13 @@ struct Index {
   @State ready: boolean = false;
   @State gridOpacity: number = 1;
   @State weekTranslation: number = 0;
-  @State gridWidth: number = 384;
+  @State gridWidth: number = 0;
   @StorageProp('isDark') dark: boolean = false;
   @State showDetail: boolean = false;
   @State selectedCourse: Course = { id: 0, name: '', teacher: '', location: '', dayOfWeek: 1,
     startSection: 1, endSection: 1, weekPattern: 'all', weeksMask: '', colorIndex: 0 };
   private ticker: number = 0;
+  private horizontalScroller: Scroller = new Scroller();
 
   aboutToAppear(): void {
     this.refresh();
@@ -203,13 +204,14 @@ struct Index {
               Text(this.atStart(day, s.sectionNo)!.name).fontSize(this.expanded ? 14 : 12).fontWeight(FontWeight.Medium)
                 .maxLines(this.expanded ? 2 : 4).textOverflow({ overflow: TextOverflow.Ellipsis })
                 .fontColor(courseForeground(this.theme(), this.atStart(day, s.sectionNo)!.colorIndex, this.dark))
-              if (this.atStart(day, s.sectionNo)!.location) {
+              if (this.expanded && this.atStart(day, s.sectionNo)!.location) {
                 Text(this.atStart(day, s.sectionNo)!.location).fontSize(12).maxLines(2)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                   .fontColor(courseForeground(this.theme(), this.atStart(day, s.sectionNo)!.colorIndex, this.dark))
               }
             }.alignItems(HorizontalAlign.Start).justifyContent(FlexAlign.Start)
-              .padding({ left: 5, right: 3, top: 8 }).width('100%').height('100%')
+              .padding({ left: this.expanded ? 5 : 2, right: this.expanded ? 3 : 2, top: 8 })
+              .width('100%').height('100%')
           }.width('100%').height(64 * (this.atStart(day, s.sectionNo)!.endSection - s.sectionNo + 1) - 4)
             .backgroundColor(courseBackground(this.theme(), this.atStart(day, s.sectionNo)!.colorIndex, this.dark))
             .borderRadius(8).margin({ top: 2, bottom: 2 })
@@ -220,7 +222,7 @@ struct Index {
           Column().width('100%').height(64).border({ width: { bottom: 0.5 }, color: this.theme().line })
         }
       }, (s: SectionTime) => `${s.sectionNo}`)
-    }.layoutWeight(1).margin({ left: 2, right: 2 })
+    }.layoutWeight(1).margin({ left: 1, right: 1 })
       .backgroundColor(this.isToday(day) ? this.theme().surface : Color.Transparent)
       .borderRadius(12)
   }
@@ -269,9 +271,7 @@ struct Index {
           Row() {
             Column({ space: 3 }) {
               Text(`本周 ${this.weekCount()} 次课`).fontSize(12).fontColor(this.theme().textSecondary)
-              if (this.expanded || this.gridWidth < 384) {
-                Text('左右滑动').fontSize(12).fontColor(this.theme().textSecondary)
-              }
+              Text(this.expanded ? '左右滑动' : '上下滑动').fontSize(12).fontColor(this.theme().textSecondary)
             }.alignItems(HorizontalAlign.Start)
             Blank()
             Row({ space: 2 }) {
@@ -279,12 +279,15 @@ struct Index {
                 Button(label, { type: ButtonType.Normal }).fontSize(14).height(40).borderRadius(20)
                   .backgroundColor(this.expanded === (index === 1) ? this.theme().cardBg : Color.Transparent)
                   .fontColor(this.expanded === (index === 1) ? this.theme().textPrimary : this.theme().textSecondary)
-                  .onClick(() => { this.getUIContext().animateTo({ duration: 220, curve: Curve.EaseOut }, () => { this.expanded = index === 1; }); })
+                  .onClick(() => {
+                    this.horizontalScroller.scrollTo({ xOffset: 0, yOffset: 0 });
+                    this.getUIContext().animateTo({ duration: 220, curve: Curve.EaseOut }, () => { this.expanded = index === 1; });
+                  })
               }, (label: string) => label)
             }.padding(3).backgroundColor(this.theme().surface).borderRadius(23)
           }.width('100%')
           Scroll() {
-            Scroll() {
+            Scroll(this.horizontalScroller) {
               Row() {
                 Column() {
                   Text('节次').height(64).fontSize(12).fontColor(this.theme().textSecondary)
@@ -293,21 +296,21 @@ struct Index {
                       Text(`${s.sectionNo}`).fontSize(12).fontWeight(FontWeight.Medium)
                         .fontColor(this.isCurrentSection(s.sectionNo) ? this.theme().accent : this.theme().textSecondary)
                       Text(sectionFor(this.data, s.sectionNo).startTime).fontSize(12).fontColor(this.theme().textSecondary)
-                    }.width(48).height(64).justifyContent(FlexAlign.Center)
+                    }.width(this.expanded ? 48 : 32).height(64).justifyContent(FlexAlign.Center)
                       .backgroundColor(this.isCurrentSection(s.sectionNo) ? this.theme().accentSoft : Color.Transparent).borderRadius(8)
                   }, (s: SectionTime) => `${s.sectionNo}`)
-                }.width(48)
+                }.width(this.expanded ? 48 : 32)
                 ForEach([1, 2, 3, 4, 5, 6, 7], (d: number) => { this.DayColumn(d) }, (d: number) => `${d}`)
-              }.alignItems(VerticalAlign.Top).width(this.expanded ? Math.max(650, this.gridWidth) : Math.max(384, this.gridWidth))
-            }.scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off).width('100%')
+              }.alignItems(VerticalAlign.Top).width(this.expanded ? Math.max(650, this.gridWidth) : '100%')
+            }.scrollable(this.expanded ? ScrollDirection.Horizontal : ScrollDirection.None).scrollBar(BarState.Off).width('100%')
               .onAreaChange((oldArea: Area, newArea: Area) => { this.gridWidth = Number(newArea.width); })
           }.scrollable(ScrollDirection.Vertical).scrollBar(BarState.Off).width('100%').layoutWeight(1)
             .opacity(this.gridOpacity).translate({ x: this.weekTranslation })
-        }.padding(10).width('100%').layoutWeight(1).backgroundColor(this.theme().cardBg)
+        }.padding(8).width('100%').layoutWeight(1).backgroundColor(this.theme().cardBg)
           .border({ width: 1, color: this.theme().line }).borderRadius(22).clip(true)
       }
       PrimaryAction({ label: '添加课程', theme: this.theme(), action: () => router.pushUrl({ url: 'pages/CourseEdit' }) })
-    }.padding({ left: 20, right: 20, top: 12, bottom: 16 }).width('100%').height('100%')
+    }.padding({ left: 16, right: 16, top: 12, bottom: 16 }).width('100%').height('100%')
       .backgroundColor(this.theme().bg).opacity(this.ready ? 1 : 0).translate({ y: this.ready ? 0 : 12 })
       .bindSheet(this.showDetail, this.CourseSheet(), { height: SheetSize.FIT_CONTENT, showClose: false, backgroundColor: this.theme().cardBg })
   }
