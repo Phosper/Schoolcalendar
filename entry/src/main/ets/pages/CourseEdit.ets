@@ -2,7 +2,8 @@ import { promptAction, router } from '@kit.ArkUI';
 import { Repository } from '../data/Repository';
 import { AppData, Course, defaultData, SectionTime, ThemeDef } from '../model/Types';
 import { conflict, validWeeksMask } from '../model/Schedule';
-import { themeById } from '../model/Themes';
+import { courseBackground, courseForeground, themeById } from '../model/Themes';
+import { FormField, PageHeader, PrimaryAction } from '../components/Design';
 import { WidgetService } from '../form/WidgetService';
 
 interface CourseParams { id?: number; }
@@ -87,87 +88,111 @@ struct CourseEdit {
   }
 
   @Builder private Label(value: string) {
-    Text(value).fontSize(15).fontWeight(FontWeight.Medium).fontColor(this.theme().textPrimary)
-      .margin({ top: 12, bottom: 8 })
+    Text(value).fontSize(12).fontWeight(FontWeight.Medium).fontColor(this.theme().textSecondary)
+      .margin({ top: 16, bottom: 9 })
   }
-
+  @Builder private SectionPicker(isStart: boolean) {
+    Scroll() {
+      Row({ space: 6 }) {
+        ForEach(this.data.sections, (s: SectionTime) => {
+          Button(`${s.sectionNo}`, { type: ButtonType.Normal }).fontSize(13).width(38).height(38).borderRadius(11)
+            .fontColor((isStart ? this.start : this.end) === s.sectionNo ? this.theme().cardBg : this.theme().textPrimary)
+            .backgroundColor((isStart ? this.start : this.end) === s.sectionNo ? this.theme().accent : this.theme().surface)
+            .animation({ duration: 180, curve: Curve.EaseOut })
+            .onClick(() => {
+              if (isStart) { this.start = s.sectionNo; if (this.end < this.start) this.end = this.start; }
+              else { this.end = s.sectionNo; if (this.start > this.end) this.start = this.end; }
+            })
+        }, (s: SectionTime) => `${s.sectionNo}`)
+      }
+    }.scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off).width('100%')
+  }
   build() {
-    Column() {
-      Row() {
-        Text('‹').fontSize(30).fontColor(this.theme().accent).onClick(() => router.back())
-        Text(this.courseId ? '编辑课程' : '添加课程').fontSize(22).fontWeight(FontWeight.Bold)
-          .fontColor(this.theme().textPrimary).margin({ left: 14 })
-      }.width('100%').height(50)
+    Column({ space: 14 }) {
+      PageHeader({ title: this.courseId ? '编辑课程' : '添加课程', caption: '把下一段学习时光安排好', theme: this.theme() })
       Scroll() {
-        Column() {
-          this.Label('课程名 *')
-          TextInput({ placeholder: '例如 高等数学 A', text: this.name })
-            .maxLength(20).onChange((v: string) => { this.name = v; })
-          this.Label('教师')
-          TextInput({ placeholder: '选填', text: this.teacher }).onChange((v: string) => { this.teacher = v; })
-          this.Label('地点')
-          TextInput({ placeholder: '教学楼与教室', text: this.location }).onChange((v: string) => { this.location = v; })
-          this.Label('课程颜色')
-          Row({ space: 7 }) {
-            ForEach(this.theme().palette, (color: string, index: number) => {
-              Column().width(26).height(26).borderRadius(13).backgroundColor(color)
-                .border({ width: this.colorIndex === index ? 3 : 0, color: this.theme().textPrimary })
-                .onClick(() => { this.colorIndex = index; })
-            }, (color: string, index: number) => `${index}`)
-          }.width('100%')
-          this.Label('星期')
-          Row({ space: 6 }) {
-            ForEach(DAYS, (label: string, index: number) => {
-              Text(label).fontSize(11).fontColor(this.day === index + 1 ? Color.White : this.theme().textPrimary)
-                .padding(6).backgroundColor(this.day === index + 1 ? this.theme().accent : this.theme().cardBg)
-                .borderRadius(8).onClick(() => { this.day = index + 1; })
-            }, (label: string) => label)
-          }.width('100%')
-          this.Label('开始节次')
-          Scroll() {
+        Column({ space: 14 }) {
+          Row({ space: 14 }) {
+            Column().width(4).height(46).borderRadius(2)
+              .backgroundColor(courseForeground(this.theme(), this.colorIndex, this.dark))
+            Column({ space: 6 }) {
+              Text(this.name || '你的课程名称').fontSize(22).fontWeight(FontWeight.Bold)
+                .fontColor(this.theme().textPrimary).maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
+              Text(`${DAYS[this.day - 1]} · 第 ${this.start}-${this.end} 节 · ${this.location || '地点待补充'}`)
+                .fontSize(12).fontColor(this.theme().textSecondary).maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
+            }.alignItems(HorizontalAlign.Start).layoutWeight(1)
+          }.padding(18).width('100%').backgroundColor(courseBackground(this.theme(), this.colorIndex, this.dark))
+            .borderRadius(20).animation({ duration: 180, curve: Curve.EaseOut })
+          Column() {
+            FormField({ label: '课程名称 *', value: this.name, hint: '例如：高等数学 A', limit: 20,
+              theme: this.theme(), changed: (v: string) => { this.name = v; } }).margin({ bottom: 14 })
+            FormField({ label: '授课教师', value: this.teacher, hint: '选填教师姓名',
+              theme: this.theme(), changed: (v: string) => { this.teacher = v; } }).margin({ bottom: 14 })
+            FormField({ label: '上课地点', value: this.location, hint: '教学楼与教室',
+              theme: this.theme(), changed: (v: string) => { this.location = v; } }).margin({ bottom: 14 })
+            Text('课程颜色').fontSize(12).fontColor(this.theme().textSecondary).margin({ bottom: 12 })
+            Row() {
+              ForEach(this.theme().palette, (color: string, index: number) => {
+                Button({ type: ButtonType.Circle }) {
+                  Text(this.colorIndex === index ? '✓' : '').fontSize(13).fontColor(Color.White)
+                }.width(26).height(26).backgroundColor(color)
+                  .scale({ x: this.colorIndex === index ? 1.10 : 0.88, y: this.colorIndex === index ? 1.10 : 0.88 })
+                  .animation({ duration: 180, curve: Curve.EaseOut }).onClick(() => { this.colorIndex = index; })
+                  .accessibilityText(`课程颜色 ${index + 1}${this.colorIndex === index ? '，已选中' : ''}`)
+              }, (color: string, index: number) => `${index}`)
+            }.width('100%').justifyContent(FlexAlign.SpaceBetween)
+          }.alignItems(HorizontalAlign.Start).padding(18).width('100%')
+            .backgroundColor(this.theme().cardBg).borderRadius(20).border({ width: 1, color: this.theme().line }).borderRadius(20)
+          Column() {
+            Text('上课安排').fontSize(16).fontWeight(FontWeight.Medium).fontColor(this.theme().textPrimary)
+            this.Label('星期')
+            Row({ space: 4 }) {
+              ForEach(DAYS, (label: string, index: number) => {
+                Button(label.replace('周', ''), { type: ButtonType.Normal }).fontSize(12).height(38).layoutWeight(1)
+                  .fontColor(this.day === index + 1 ? this.theme().cardBg : this.theme().textPrimary)
+                  .backgroundColor(this.day === index + 1 ? this.theme().accent : this.theme().surface)
+                  .borderRadius(11).animation({ duration: 180, curve: Curve.EaseOut }).onClick(() => { this.day = index + 1; })
+                  .accessibilityText(label)
+              }, (label: string) => label)
+            }.width('100%')
+            this.Label('开始节次')
+            this.SectionPicker(true)
+            this.Label('结束节次')
+            this.SectionPicker(false)
+            this.Label('上课周次')
             Row({ space: 6 }) {
-              ForEach(this.data.sections, (s: SectionTime) => {
-                Text(`${s.sectionNo}`).fontSize(14).fontColor(this.start === s.sectionNo ? Color.White : this.theme().textPrimary)
-                  .width(36).height(36).textAlign(TextAlign.Center)
-                  .backgroundColor(this.start === s.sectionNo ? this.theme().accent : this.theme().cardBg)
-                  .borderRadius(8).onClick(() => { this.start = s.sectionNo; if (this.end < this.start) this.end = this.start; })
-              }, (s: SectionTime) => `${s.sectionNo}`)
+              ForEach(['all', 'odd', 'even', 'custom'], (value: string, index: number) => {
+                Button(['每周', '单周', '双周', '自定义'][index], { type: ButtonType.Normal }).fontSize(12).height(38).layoutWeight(1)
+                  .fontColor(this.pattern === value ? this.theme().cardBg : this.theme().textPrimary)
+                  .backgroundColor(this.pattern === value ? this.theme().accent : this.theme().surface)
+                  .borderRadius(11).animation({ duration: 180, curve: Curve.EaseOut }).onClick(() => { this.pattern = value; })
+              }, (value: string) => value)
+            }.width('100%')
+            if (this.pattern === 'custom') {
+              TextInput({ placeholder: '输入周次：1-8,11,13', text: this.weeks }).height(46).fontSize(14)
+                .fontColor(this.theme().textPrimary).placeholderColor(this.theme().textSecondary)
+                .backgroundColor(this.theme().surface).borderRadius(12).margin({ top: 12 })
+                .onChange((v: string) => { this.weeks = v; })
+              Button('快速选择第 1-8 周', { type: ButtonType.Normal }).fontSize(11).height(36)
+                .backgroundColor(Color.Transparent).fontColor(this.theme().accent)
+                .onClick(() => { this.weeks = '1-8'; })
             }
-          }.scrollable(ScrollDirection.Horizontal)
-          this.Label('结束节次')
-          Scroll() {
-            Row({ space: 6 }) {
-              ForEach(this.data.sections, (s: SectionTime) => {
-                Text(`${s.sectionNo}`).fontSize(14).fontColor(this.end === s.sectionNo ? Color.White : this.theme().textPrimary)
-                  .width(36).height(36).textAlign(TextAlign.Center)
-                  .backgroundColor(this.end === s.sectionNo ? this.theme().accent : this.theme().cardBg)
-                  .borderRadius(8).onClick(() => { this.end = s.sectionNo; if (this.start > this.end) this.start = this.end; })
-              }, (s: SectionTime) => `${s.sectionNo}`)
-            }
-          }.scrollable(ScrollDirection.Horizontal)
-          this.Label('上课周次')
-          Row({ space: 7 }) {
-            ForEach(['all', 'odd', 'even', 'custom'], (value: string, index: number) => {
-              Text(['每周', '单周', '双周', '自定义'][index]).fontSize(13)
-                .fontColor(this.pattern === value ? Color.White : this.theme().textPrimary)
-                .padding(9).backgroundColor(this.pattern === value ? this.theme().accent : this.theme().cardBg)
-                .borderRadius(8).onClick(() => { this.pattern = value; })
-            }, (value: string) => value)
-          }
-          if (this.pattern === 'custom') {
-            TextInput({ placeholder: '输入周次：1-8,11,13', text: this.weeks })
-              .margin({ top: 8 }).onChange((v: string) => { this.weeks = v; })
-            Text('快速选择第 1-8 周').fontSize(12).fontColor(this.theme().accent)
-              .onClick(() => { this.weeks = '1-8'; })
-          }
-          Button('保存课程').width('100%').height(50).margin({ top: 28 })
-            .backgroundColor(this.theme().accent).onClick(() => this.save())
+          }.alignItems(HorizontalAlign.Start).padding(18).width('100%')
+            .backgroundColor(this.theme().cardBg).borderRadius(20).border({ width: 1, color: this.theme().line }).borderRadius(20)
           if (this.courseId > 0) {
-            Button('删除课程').width('100%').height(48).margin({ top: 10, bottom: 24 })
-              .backgroundColor('#E87272').onClick(() => this.remove())
+            Button('删除这门课程', { type: ButtonType.Normal }).width('100%').height(46).borderRadius(14)
+              .backgroundColor(this.theme().cardBg).fontColor(this.dark || this.data.themeId === 'deep_space' ? '#FFA6AF' : '#AD4E61')
+              .onClick(() => this.remove())
           }
+          Text('保存后会更新课表与桌面卡片').fontSize(11).fontColor(this.theme().textSecondary)
+            .width('100%').textAlign(TextAlign.Center).margin({ bottom: 10 })
         }.alignItems(HorizontalAlign.Start).width('100%')
-      }.layoutWeight(1)
-    }.padding(18).width('100%').height('100%').backgroundColor(this.theme().bg)
+      }.layoutWeight(1).scrollBar(BarState.Off).width('100%')
+      PrimaryAction({ label: '保存课程', theme: this.theme(), action: () => this.save() })
+    }.padding({ left: 20, right: 20, top: 12, bottom: 16 }).width('100%').height('100%').backgroundColor(this.theme().bg)
+  }
+  pageTransition() {
+    PageTransitionEnter({ duration: 260, curve: Curve.EaseOut }).opacity(0).translate({ x: 14 })
+    PageTransitionExit({ duration: 180, curve: Curve.EaseIn }).opacity(0).translate({ x: -8 })
   }
 }

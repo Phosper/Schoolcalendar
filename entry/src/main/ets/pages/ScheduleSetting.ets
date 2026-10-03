@@ -3,6 +3,7 @@ import { Repository } from '../data/Repository';
 import { AppData, defaultData, DEFAULT_SECTIONS, SectionTime, ThemeDef } from '../model/Types';
 import { minutes, pad } from '../model/Schedule';
 import { themeById } from '../model/Themes';
+import { PageHeader, PrimaryAction } from '../components/Design';
 import { WidgetService } from '../form/WidgetService';
 
 @Entry
@@ -51,35 +52,56 @@ struct ScheduleSetting {
     router.back();
   }
   build() {
-    Column({ space: 12 }) {
-      Row() { Text('‹').fontSize(30).fontColor(this.theme().accent).onClick(() => router.back())
-        Text('作息时间').fontSize(22).fontWeight(FontWeight.Bold).margin({ left: 14 }) }.width('100%')
-      Row({ space: 12 }) {
-        Button('− 减少').onClick(() => this.reduceSection())
-        Text(`每日 ${this.sections.length} 节`).fontSize(15)
-        Button('＋ 增加').onClick(() => this.addSection())
-      }.width('100%')
+    Column({ space: 14 }) {
+      PageHeader({ title: '作息时间', caption: '按学校的节奏，设置每一节课', theme: this.theme() })
+      Row({ space: 10 }) {
+        Column({ space: 5 }) {
+          Text(`每日 ${this.sections.length} 节`).fontSize(21).fontWeight(FontWeight.Bold).fontColor(this.theme().textPrimary)
+          Text('时间格式为 HH:mm').fontSize(11).fontColor(this.theme().textSecondary)
+        }.alignItems(HorizontalAlign.Start).layoutWeight(1)
+        Button('−', { type: ButtonType.Normal }).width(40).height(40).borderRadius(12)
+          .backgroundColor(this.theme().cardBg).fontColor(this.theme().accent).enabled(this.sections.length > 1)
+          .onClick(() => this.reduceSection()).accessibilityText('减少一节课')
+        Button('＋', { type: ButtonType.Normal }).width(40).height(40).borderRadius(12)
+          .backgroundColor(this.theme().accent).fontColor(this.theme().cardBg).enabled(this.sections.length < 15)
+          .onClick(() => this.addSection()).accessibilityText('增加一节课')
+      }.width('100%').padding(18).backgroundColor(this.theme().accentSoft).borderRadius(20)
+      Row() {
+        Text('节次').width(44).fontSize(11).fontColor(this.theme().textSecondary)
+        Text('开始时间').layoutWeight(1).fontSize(11).fontColor(this.theme().textSecondary)
+        Text('结束时间').layoutWeight(1).fontSize(11).fontColor(this.theme().textSecondary)
+      }.width('100%').padding({ left: 16, right: 16 })
       Scroll() {
         Column({ space: 8 }) {
           ForEach(this.sections, (s: SectionTime, index: number) => {
             Row({ space: 8 }) {
-              Text(`${s.sectionNo}`).width(26).fontWeight(FontWeight.Bold)
-              TextInput({ text: s.startTime }).width(100).onChange((v: string) => this.editTime(index, true, v))
-              Text('—')
-              TextInput({ text: s.endTime }).width(100).onChange((v: string) => this.editTime(index, false, v))
-            }.padding(8).width('100%').backgroundColor(this.theme().cardBg).borderRadius(10)
+              Text(`${s.sectionNo}`).width(28).height(32).fontSize(14).fontWeight(FontWeight.Medium)
+                .textAlign(TextAlign.Center).fontColor(this.theme().accent)
+              TextInput({ text: this.sections[index].startTime }).layoutWeight(1).height(42).fontSize(14).borderRadius(11)
+                .fontColor(this.theme().textPrimary).backgroundColor(this.theme().surface)
+                .onChange((v: string) => this.editTime(index, true, v))
+              Text('—').fontSize(12).fontColor(this.theme().textSecondary)
+              TextInput({ text: this.sections[index].endTime }).layoutWeight(1).height(42).fontSize(14).borderRadius(11)
+                .fontColor(this.theme().textPrimary).backgroundColor(this.theme().surface)
+                .onChange((v: string) => this.editTime(index, false, v))
+            }.padding(12).width('100%').backgroundColor(this.theme().cardBg).borderRadius(16)
+              .border({ width: 1, color: this.theme().line }).borderRadius(16)
+              .transition(TransitionEffect.OPACITY.combine(TransitionEffect.translate({ y: 8 })).animation({ duration: 180 }))
           }, (s: SectionTime) => `${s.sectionNo}`)
         }.width('100%')
-      }.layoutWeight(1)
-      Row({ space: 12 }) {
-        Button('恢复默认').backgroundColor(this.theme().textSecondary).onClick(() => {
+      }.layoutWeight(1).width('100%').scrollBar(BarState.Off)
+      Button('恢复默认作息', { type: ButtonType.Normal }).height(38).fontSize(12)
+        .backgroundColor(Color.Transparent).fontColor(this.theme().textSecondary).onClick(() => {
           if (this.data.courses.some((c) => c.endSection > 12)) {
             promptAction.showToast({ message: '第 13 节以后已有课程，无法恢复默认' }); return;
           }
           this.sections = DEFAULT_SECTIONS.map((s: SectionTime): SectionTime => ({ sectionNo: s.sectionNo, startTime: s.startTime, endTime: s.endTime }));
         })
-        Button('保存').backgroundColor(this.theme().accent).onClick(() => this.save())
-      }.width('100%').justifyContent(FlexAlign.End)
-    }.padding(18).width('100%').height('100%').backgroundColor(this.theme().bg)
+      PrimaryAction({ label: '保存作息时间', theme: this.theme(), action: () => this.save() })
+    }.padding({ left: 20, right: 20, top: 12, bottom: 16 }).width('100%').height('100%').backgroundColor(this.theme().bg)
+  }
+  pageTransition() {
+    PageTransitionEnter({ duration: 260, curve: Curve.EaseOut }).opacity(0).translate({ x: 14 })
+    PageTransitionExit({ duration: 180, curve: Curve.EaseIn }).opacity(0).translate({ x: -8 })
   }
 }

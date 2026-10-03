@@ -3,6 +3,7 @@ import { Repository } from '../data/Repository';
 import { AppData, defaultData, ThemeDef } from '../model/Types';
 import { dateKey, parseDate } from '../model/Schedule';
 import { themeById } from '../model/Themes';
+import { AppIcon, FormField, PageHeader, PrimaryAction } from '../components/Design';
 import { WidgetService } from '../form/WidgetService';
 
 @Entry
@@ -32,18 +33,36 @@ struct SemesterSetting {
     router.back();
   }
   build() {
-    Column({ space: 14 }) {
-      Row() { Text('‹').fontSize(30).fontColor(this.theme().accent).onClick(() => router.back())
-        Text('学期设置').fontSize(22).fontWeight(FontWeight.Bold).margin({ left: 14 }) }.width('100%')
-      Text('学期名称').fontSize(15).width('100%')
-      TextInput({ text: this.name, placeholder: '例如 2026 秋季学期' }).onChange((v: string) => { this.name = v; })
-      Text('第一周周一日期').fontSize(15).width('100%')
-      TextInput({ text: this.date, placeholder: 'YYYY-MM-DD' }).onChange((v: string) => { this.date = v; })
-      Text('学期总周数（1-30）').fontSize(15).width('100%')
-      TextInput({ text: this.weeks, placeholder: '20' }).type(InputType.Number).onChange((v: string) => { this.weeks = v; })
-      Text('日期是教学第一周的周一；课程单双周按此日期计算。').fontSize(13).fontColor(this.theme().textSecondary)
-      Button('保存学期').width('100%').backgroundColor(this.theme().accent).onClick(() => this.save())
-    }.padding(18).width('100%').height('100%').alignItems(HorizontalAlign.Start)
+    Column({ space: 16 }) {
+      PageHeader({ title: '学期设置', caption: '从第一周开始，安排整个学期', theme: this.theme() })
+      Scroll() {
+        Column({ space: 16 }) {
+          Row({ space: 14 }) {
+            AppIcon({ name: 'calendar', iconSize: 30 })
+            Column({ space: 6 }) {
+              Text('新学期，新的节奏').fontSize(21).fontWeight(FontWeight.Bold).fontColor(this.theme().textPrimary)
+              Text('学期日期决定每门课的教学周次').fontSize(12).fontColor(this.theme().textSecondary)
+            }.alignItems(HorizontalAlign.Start).layoutWeight(1)
+          }.padding(20).width('100%').backgroundColor(this.theme().accentSoft).borderRadius(22)
+          Column({ space: 12 }) {
+            FormField({ label: '学期名称', value: this.name, hint: '例如：2026 秋季学期',
+              theme: this.theme(), changed: (v: string) => { this.name = v; } })
+            FormField({ label: '第一周周一日期', value: this.date, hint: 'YYYY-MM-DD',
+              theme: this.theme(), changed: (v: string) => { this.date = v; } })
+            FormField({ label: '学期总周数 · 1 至 30 周', value: this.weeks, hint: '20', numeric: true,
+              theme: this.theme(), changed: (v: string) => { this.weeks = v; } })
+          }.padding(20).width('100%').backgroundColor(this.theme().cardBg).borderRadius(20)
+            .border({ width: 1, color: this.theme().line }).borderRadius(20)
+          Text('将开学第一周的周一设为起点，单双周课程会按此日期自动排列。')
+            .fontSize(12).lineHeight(21).fontColor(this.theme().textSecondary).padding({ left: 4, right: 4 })
+        }.width('100%')
+      }.layoutWeight(1).width('100%').scrollBar(BarState.Off).align(Alignment.TopStart)
+      PrimaryAction({ label: '保存学期', theme: this.theme(), action: () => this.save() })
+    }.padding({ left: 20, right: 20, top: 12, bottom: 16 }).width('100%').height('100%')
       .backgroundColor(this.theme().bg)
+  }
+  pageTransition() {
+    PageTransitionEnter({ duration: 260, curve: Curve.EaseOut }).opacity(0).translate({ x: 14 })
+    PageTransitionExit({ duration: 180, curve: Curve.EaseIn }).opacity(0).translate({ x: -8 })
   }
 }

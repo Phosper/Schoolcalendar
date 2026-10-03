@@ -41,6 +41,9 @@ export interface ThemeDef {
   textSecondary: string;
   accent: string;
   palette: string[];
+  line: string;
+  surface: string;
+  accentSoft: string;
 }
 
 export const DEFAULT_SECTIONS: SectionTime[] = [

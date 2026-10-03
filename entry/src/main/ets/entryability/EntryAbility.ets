@@ -1,5 +1,7 @@
 import { Configuration, ConfigurationConstant, UIAbility } from '@kit.AbilityKit';
 import { window } from '@kit.ArkUI';
+import { themeById } from '../model/Themes';
+import { syncSystemBars } from '../model/Appearance';
 
 export default class EntryAbility extends UIAbility {
   onCreate(): void {
@@ -8,6 +10,8 @@ export default class EntryAbility extends UIAbility {
 
   onConfigurationUpdate(config: Configuration): void {
     AppStorage.setOrCreate('isDark', config.colorMode === ConfigurationConstant.ColorMode.COLOR_MODE_DARK);
+    syncSystemBars(this.context, themeById(AppStorage.get<string>('themeId') ?? 'fresh_green',
+      config.colorMode === ConfigurationConstant.ColorMode.COLOR_MODE_DARK));
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
